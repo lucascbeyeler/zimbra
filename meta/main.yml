@@ -17,4 +17,5 @@ galaxy_info:
   galaxy_tags:
     - zimbra
     - monoserver
-dependencies: [lucascbeyeler.ansible-commons]
+dependencies:
+  - lucascbeyeler.ansible-commons
