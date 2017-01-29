@@ -1,2 +1,9 @@
 ---
 # vars file for zimbra
+
+hostname: localhost
+domain: localdomain
+zmpasswd: 123change
+zmnetwork: 0.0.0.0/8
+zmlogologin:
+zmlogoapp:

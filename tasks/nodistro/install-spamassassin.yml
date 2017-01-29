@@ -33,7 +33,7 @@
 # Registering Razor Install
 ###################################
 - name: Registering your Razor installation - User definitions
-  shell: 'razor-admin -home=/opt/zimbra/data/amavisd/.razor -register -user {{ rzuser }} -pass {{ rzpass }}'
+  shell: 'razor-admin -home=/opt/zimbra/data/amavisd/.razor -register'
   become: true
   become_user: zimbra
   when: rzuser is defined and rzpass is not defined

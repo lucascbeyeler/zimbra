@@ -1,31 +1,41 @@
-Role Name
+Ansible-Zimbra
 =========
 
-A brief description of the role goes here.
+Ansible role to install and configure Zimbra Collaboration Open Source Edition in a monoserver environment
 
 Requirements
 ------------
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+* [Ansible](https://github.com/ansible/ansible) 2.2.0 or superior. Less than this and you will have problems running Zimbra's Playbook. See ansible-modules-core Bug #4202
 
 Role Variables
 --------------
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+* **hostname:** set the hostname of your server **WITHOUT** the domain;
+* **domain:** set the domain for the server and the primary domain for your Zimbra server;
+* **zmpasswd:** set the password used for every single service in your Zimbra server, like the admin account and the LDAPServer - **WARNING:** do not put special characters in the password during the install;
+* **zmnetwork:** set the network the Zimbra server is;
+* **zmlogologin:** Inform the path for your logo (Login Screen) - don't inform and no image will be applied;
+* **zmlogoapp:** Inform the path for your logo (Application Screen) - don't inform and no image will be applied;
 
 Dependencies
 ------------
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+It's a good idea to apply the role ansible-commons before run this playbook, because we do not cover any kind of server preparation, like updates.
+
 
 Example Playbook
 ----------------
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
-
     - hosts: servers
       roles:
-         - { role: username.rolename, x: 42 }
+         - role: lucascbeyeler.zimbra,
+           hostname: warudo,
+           domain: hollowbastion.com,
+           zmpasswd: 123change,
+           zmnetwork: 192.168.122.0/24,
+           zmlogologin: /tmp/login.png,
+           zmlogoapp: /tmp/app.png
 
 License
 -------
