@@ -1,0 +1,64 @@
+# FILE: install-zimbra
+# AUTHOR: Lucas Costa Beyeler
+# E-MAIL: lucas.costab@outlook.com
+# LAST CHANGE: 09/03/2016
+#
+# Here we will download and install the Zimbra Server for first use. This
+# playbook was made in a way to be used the same code for ever distro.
+# PLEASE - If you made a change here, remember to do in a way that every distro
+#          can use this change. Otherwise, please use the folder RedHat/Debian.
+
+- name: Download and Unpacking Zimbra Collaboration - Open Source Edition
+  unarchive:
+    validate_certs: no
+    src: '{{ zmurl }}{{ zmpkg }}.tgz'
+    dest: /usr/local/src/
+    copy: no
+
+- name: Create the Folder Structure for the Installer (TEMP)
+  file:
+    path: /tmp/zcs
+    state: directory
+
+- name: Uploading Keystroke File (TEMP)
+  copy:
+    src: 'installZimbra-keystrokes'
+    dest: /tmp/zcs/installZimbra-keystrokes
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Uploading Installer Configuration File (TEMP)
+  template:
+    src: 'installZimbraScript.j2'
+    dest: /tmp/zcs/installZimbraScript
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Installing Zimbra Collaboration's Packages
+  shell: ./install.sh -s < /tmp/zcs/installZimbra-keystrokes
+  args:
+    chdir: '/usr/local/src/{{ zmpkg }}/'
+
+- name: Configuring the Server for First Use - This will take a while...
+  shell: ./zmsetup.pl -c /tmp/zcs/installZimbraScript
+  args:
+    chdir: /opt/zimbra/libexec/
+
+- name: Setting LMTP Host Lookup from DNS to Native
+  shell: ./zmprov mcf zimbraMtaLmtpHostLookup native
+  args:
+    chdir: /opt/zimbra/bin/
+
+- name: Setting Admin via Proxy Server
+  shell: ./zmproxyconfig -e -w -C -H {{ hostname }}.{{ domain }}
+  args:
+    chdir: /opt/zimbra/libexec/
+  become: yes
+  become_user: zimbra
+
+- name: Redirecting HTTP to HTTPS
+  shell: ./zmprov ms {{ hostname }}.{{ domain }} zimbraReverseProxyMailMode redirect
+  args:
+    chdir: /opt/zimbra/bin/

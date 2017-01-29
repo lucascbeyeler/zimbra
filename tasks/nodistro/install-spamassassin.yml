@@ -1,0 +1,94 @@
+# Here we will download and install the Zimbra Server for first use. This
+# playbook was made in a way to be used the same code for ever distro.
+# PLEASE - If you made a change here, remember to do in a way that every distro
+#          can use this change. Otherwise, please use the folder RedHat/Debian.
+
+#
+# Downloading packages
+###################################
+- name: Downloading and Installing Kevin McGrail's Custom Rules
+  get_url:
+    url: https://www.pccc.com/downloads/SpamAssassin/contrib/KAM.cf
+    dest: /opt/zimbra/data/spamassassin/localrules/sakam.cf
+    mode: 0440
+    owner: zimbra
+    group: zimbra
+
+- name: Downloading and Configuring Pyzor's Anti-spam Base
+  shell: pyzor --homedir /opt/zimbra/data/amavisd/.pyzor discover
+  become: true
+  become_user: zimbra
+
+- name: Creating Razor's Anti-spam Base
+  shell: razor-admin -home=/opt/zimbra/data/amavisd/.razor -create
+  become: true
+  become_user: zimbra
+
+- name: Downloading Razor's Anti-spam Base
+  shell: razor-admin -home=/opt/zimbra/data/amavisd/.razor -discover
+  become: true
+  become_user: zimbra
+
+#
+# Registering Razor Install
+###################################
+- name: Registering your Razor installation - User definitions
+  shell: 'razor-admin -home=/opt/zimbra/data/amavisd/.razor -register -user {{ rzuser }} -pass {{ rzpass }}'
+  become: true
+  become_user: zimbra
+  when: rzuser is defined and rzpass is not defined
+
+- name: Registering your Razor installation - DEFAULT
+  shell: 'razor-admin -home=/opt/zimbra/data/amavisd/.razor -register'
+  become: true
+  become_user: zimbra
+  when: rzuser is not defined and rzpass is not defined
+
+#
+# Configuring the Spamassassin
+###################################
+- name: Configuring sauser.cf With new Scores
+  copy:
+    src: sauser.cf
+    dest: /opt/zimbra/data/spamassassin/localrules/sauser.cf
+    owner: root
+    group: root
+    mode: 0440
+
+#
+# Installing the RBL's
+###################################
+- name: Importing zen.spamhaus.org RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client zen.spamhaus.org'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+
+- name: Importing sbl.spamhaus.org RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client sbl.spamhaus.org'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+
+- name: Importing dsn.rfc-ignorant.org RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client dsn.rfc-ignorant.org'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+
+- name: Importing bl.spamcop.net RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client bl.spamcop.net'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+
+- name: Importing dnsbl.sorbs.net RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client dnsbl.sorbs.net'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra

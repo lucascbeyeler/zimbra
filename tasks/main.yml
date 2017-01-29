@@ -1,0 +1,18 @@
+---
+# tasks file for zimbra
+
+#
+# Loading variables
+###################################
+- include_vars: file='{{ ansible_os_family }}/packages.yml'
+- include: 'vars/zimbra-{{ ansible_os_family }}.yml'
+
+#
+# Starting the install
+###################################
+- include: '{{ ansible_os_family }}/packages.yml'
+- include: nodistro/install-zimbra.yml
+- include: nodistro/install-spamassassin.yml
+- include: nodistro/modify-logo.yml
+  when: zmlogologin is defined and zmlogoapp is defined
+  notify: reboot-machine

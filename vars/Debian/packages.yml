@@ -1,0 +1,20 @@
+# Here you can set the packages name installed by zimbra's role
+
+# Dependency is where you inform the packages Zimbra need to be installed before
+# you run the installer
+
+dependency:
+  - libgmp10
+  - libperl5.22
+  - pax
+  - sqlite3
+  - dnsmasq
+  - wget
+  - libaio1
+  - razor
+  - pyzor
+
+absent:
+  - postfix
+  - sendmail
+  - dnsmasq

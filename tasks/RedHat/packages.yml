@@ -1,0 +1,8 @@
+# Here we will download some packages that are needed to be present during the
+# Zimbra install
+
+- name: Download all the Zimbra's dependency for CentOS/RHEL System
+  yum: pkg='{{ dependency }}' state=installed
+
+- name: Ensure Postfix not installed
+  yum: pkg='{{ absent }}' state=absent
