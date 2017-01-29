@@ -18,4 +18,4 @@ galaxy_info:
     - zimbra
     - monoserver
 dependencies:
-  - lucascbeyeler.ansible-commons
+  - ansible-commons
