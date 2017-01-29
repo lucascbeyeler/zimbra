@@ -38,7 +38,7 @@ It's a good idea to apply the role ansible-commons before run this playbook, bec
 
 Example Playbook
 ----------------
-
+```
     - hosts: zimbra
       become: yes
       become_method: sudo
@@ -50,6 +50,7 @@ Example Playbook
            zmnetwork: 192.168.122.0/24
            zmlogologin: /tmp/login.png
            zmlogoapp: /tmp/app.png
+```
 
 License
 -------
