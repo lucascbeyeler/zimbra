@@ -10,6 +10,16 @@ Requirements
 
 * [Ansible](https://github.com/ansible/ansible) 2.2.0 or superior. Less than this and you will have problems running Zimbra's Playbook. See ansible-modules-core Bug #4202
 
+- Configure de file /etc/ansible/ansible.cfg (create if don't exist) and set this options - not required if you using key and the ssh user is "root" already:
+```
+[defaults]
+host_key_checking=False
+stdout_callback=skippy
+
+[ssh_connection]
+pipelining=True
+```
+
 Role Variables
 --------------
 
@@ -29,14 +39,16 @@ It's a good idea to apply the role ansible-commons before run this playbook, bec
 Example Playbook
 ----------------
 
-    - hosts: servers
+    - hosts: zimbra
+      become: yes
+      become_method: sudo
       roles:
-         - role: lucascbeyeler.zimbra,
-           hostname: warudo,
-           domain: hollowbastion.com,
-           zmpasswd: 123change,
-           zmnetwork: 192.168.122.0/24,
-           zmlogologin: /tmp/login.png,
+         - role: lucascbeyeler.ansible-zimbra
+           hostname: warudo
+           domain: hollowbastion.com
+           zmpasswd: 123change
+           zmnetwork: 192.168.122.0/24
+           zmlogologin: /tmp/login.png
            zmlogoapp: /tmp/app.png
 
 License
