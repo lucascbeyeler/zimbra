@@ -3,6 +3,8 @@ Ansible-Zimbra
 
 Ansible role to install and configure Zimbra Collaboration Open Source Edition in a monoserver environment
 
+[![Build Status](https://travis-ci.org/lucascbeyeler/ansible-zimbra.svg?branch=master)](https://travis-ci.org/lucascbeyeler/ansible-zimbra)
+
 Requirements
 ------------
 
