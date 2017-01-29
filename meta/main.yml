@@ -1,6 +1,6 @@
 galaxy_info:
   author: Lucas Costa Beyeler
-  description: Developer and SysAdmin
+  description: Ansible role to install and configure Zimbra Collaboration Open Source Edition in a monoserver environment
   company: 4Linux - Open Software Specialists
   license: GPLv3
   min_ansible_version: 2.2
@@ -18,4 +18,4 @@ galaxy_info:
     - zimbra
     - monoserver
 dependencies:
-  - { role: lucascbeyeler.ansible-commons }
+  - { role: lucascbeyeler.commons }
