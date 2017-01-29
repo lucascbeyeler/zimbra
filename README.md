@@ -33,7 +33,7 @@ Role Variables
 Dependencies
 ------------
 
-It's a good idea to apply the role ansible-commons before run this playbook, because we do not cover any kind of server preparation, like updates.
+It's a good idea to apply the role lucascbeyeler.commons before run this playbook, because we do not cover any kind of server preparation, like updates.
 
 
 Example Playbook
