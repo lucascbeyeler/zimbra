@@ -10,7 +10,6 @@
 #
 # Starting the install
 ###################################
-- include: nodistro/hostname.yml
 - include: '{{ ansible_os_family }}/packages.yml'
 - include: nodistro/install-zimbra.yml
 - include: nodistro/install-spamassassin.yml
