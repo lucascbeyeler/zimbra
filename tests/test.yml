@@ -2,8 +2,8 @@
 - hosts: localhost
   remote_user: root
   roles:
-    
-   - role: ansible-commons
+
+   - role: lucascbeyeler.commons
      hostname: warudo
      domain: hollowbastion.com
      zmpasswd: 123change
