@@ -5,6 +5,9 @@ python: "2.7"
 # Use the new container infrastructure
 sudo: true
 
+# This playbook need to run on Ubuntu 14.04 or later
+dist: trusty
+
 # Install ansible
 addons:
   apt:
