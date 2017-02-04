@@ -1,0 +1,14 @@
+# Change the hostname and ensure the /etc/hosts has the hostname linked to the
+# localhost. This is very important for some services, like Zimbra, who will
+# check for the LDAP Server's IP.
+
+- name: Correct the machine's hostname to {{ hostname }}
+  hostname: name='{{ hostname }}.{{ domain }}'
+
+- name: Changing the host's file for the template
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644

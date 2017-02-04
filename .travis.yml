@@ -23,12 +23,6 @@ install:
 
   # Create ansible.cfg with correct roles_path
   - printf '[defaults]\nroles_path=../' >ansible.cfg
-
-  # Include the domain inside the /etc/hosts
-  - printf '127.0.0.1 localhost.localdomain localhost' > /etc/hosts
-
-  # Change the hostname
-  - hostnamectl set-hostname 'localhost.localdomain'
   
 script:
   # Basic role syntax check
