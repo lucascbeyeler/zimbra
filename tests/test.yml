@@ -2,6 +2,13 @@
 - hosts: localhost
   remote_user: root
   roles:
+    
+   - role: ansible-commons
+     hostname: warudo
+     domain: hollowbastion.com
+     zmpasswd: 123change
+     zmnetwork: 192.168.122.0/24
+
    - role: ansible-zimbra
      hostname: warudo
      domain: hollowbastion.com

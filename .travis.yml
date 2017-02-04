@@ -23,9 +23,13 @@ install:
 
   # Install ansible-commons
   - ansible-galaxy install lucascbeyeler.commons
+
 script:
   # Basic role syntax check
   - ansible-playbook tests/test.yml -i tests/inventory --syntax-check
+
+  # Run the role/playbook with ansible-playbook.
+  - "ansible-playbook -i tests/inventory tests/test.yml --connection=local --sudo"
 
 notifications:
   webhooks: https://galaxy.ansible.com/api/v1/notifications/
