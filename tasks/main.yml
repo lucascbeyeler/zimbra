@@ -1,5 +1,4 @@
----
-# tasks file for zimbra
+# This is the main file for the role.
 
 #
 # Loading variables
@@ -14,5 +13,7 @@
 - include: nodistro/install-zimbra.yml
 - include: nodistro/install-spamassassin.yml
 - include: nodistro/modify-logo.yml
+  when: zmlogologin is defined and zmlogoapp is defined
+- include: nodistro/policyd.yml
   when: zmlogologin is defined and zmlogoapp is defined
   notify: reboot-machine
