@@ -32,17 +32,10 @@
 #
 # Registering Razor Install
 ###################################
-- name: Registering your Razor installation - User definitions
-  shell: 'razor-admin -home=/opt/zimbra/data/amavisd/.razor -register'
-  become: true
-  become_user: zimbra
-  when: rzuser is defined and rzpass is not defined
-
 - name: Registering your Razor installation - DEFAULT
   shell: 'razor-admin -home=/opt/zimbra/data/amavisd/.razor -register'
   become: true
   become_user: zimbra
-  when: rzuser is not defined and rzpass is not defined
 
 #
 # Configuring the Spamassassin

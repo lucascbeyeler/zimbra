@@ -15,5 +15,4 @@
 - include: nodistro/modify-logo.yml
   when: zmlogologin is defined and zmlogoapp is defined
 - include: nodistro/policyd.yml
-  when: zmlogologin is defined and zmlogoapp is defined
   notify: reboot-machine
