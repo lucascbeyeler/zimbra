@@ -2,12 +2,12 @@
 # correct package to install
 
 - name: Set the Playbook to Install Zimbra Collaboration 8.7 - Open Source Edition
-  set_fact: zmurl=https://files.zimbra.com/downloads/8.7.2_GA
+  set_fact: zmurl=https://files.zimbra.com/downloads/8.7.3_GA/
 
 - name: Check if your distro is Red Hat Enterprise Linux or CentOS (Major 6)
-  set_fact: zmpkg=zcs-8.7.2_GA_1736.RHEL6_64.20170131053933
+  set_fact: zmpkg=zcs-8.7.3_GA_1750.RHEL6_64.20170215042321
   when: ansible_distribution_major_version == "6"
 
 - name: Check if your distro is Red Hat Enterprise Linux or CentOS (Major 7)
-  set_fact: zmpkg=zcs-8.7.2_GA_1736.RHEL7_64.20170131053933
+  set_fact: zmpkg=zcs-8.7.3_GA_1750.RHEL7_64.20170215042321
   when: ansible_distribution_major_version == "7"
