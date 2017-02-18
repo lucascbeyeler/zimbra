@@ -1,8 +1,3 @@
-# FILE: install-zimbra
-# AUTHOR: Lucas Costa Beyeler
-# E-MAIL: lucas.costab@outlook.com
-# LAST CHANGE: 09/03/2016
-#
 # Here we will download and install the Zimbra Server for first use. This
 # playbook was made in a way to be used the same code for ever distro.
 # PLEASE - If you made a change here, remember to do in a way that every distro

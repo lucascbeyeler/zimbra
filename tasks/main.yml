@@ -15,4 +15,12 @@
 - include: nodistro/modify-logo.yml
   when: zmlogologin is defined and zmlogoapp is defined
 - include: nodistro/policyd.yml
-  notify: reboot-machine
+
+#
+# Rebooting the Machine
+###################################
+- name: Rebooting the machine to apply the changes
+  shell: sleep 2 && shutdown -r now "Ansible updates triggered"
+  async: 1
+  poll: 0
+  ignore_errors: true

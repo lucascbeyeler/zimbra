@@ -20,6 +20,33 @@ stdout_callback=skippy
 pipelining=True
 ```
 
+Install
+--------------
+ansible-zimbra is already in Ansible Galaxy, so the only thing you need to install this script in your machine is just use ansible-galaxy command:
+
+```
+ansible-galaxy install lucascbeyeler.ansible-zimbra
+```
+
+Update
+--------------
+When a new version of ansible-zimbra is released, you will need to run the install process again, but with the "-f" or "--force" parameter.
+
+```
+ansible-galaxy install -f lucascbeyeler.ansible-zimbra
+```
+
+Features
+--------------
+
+* Configuring SpamAssassin, Pyzor and Razor;
+* Configure a logo for your server - **WARNING**: [Read this article for more details about the logo](https://blog.zimbra.com/2015/09/change-login-app-logo-open-source-network-edition/);
+* Enable PolicyD service and web admin;
+* Proxy Admin;
+* HTTP to HTTPS redirect;
+* LMTP Host Lookup in Native mode;
+
+
 Role Variables
 --------------
 
@@ -33,8 +60,7 @@ Role Variables
 Dependencies
 ------------
 
-It's a good idea to apply the role lucascbeyeler.commons before run this playbook, because we do not cover any kind of server preparation, like updates.
-
+To run this playbook, you will need to run [lucascbeyeler.commons](https://github.com/lucascbeyeler/ansible-commons) too. We do not cover any kind of server preparation, like upgrade the system or change the hostname (even put the hostname in /etc/hosts is made by commons). The motive is because all my playbooks will need some kind of preparation before executed, so to not including the same code in every single project, I made a different playbook that will do everything that is considered "common" in each one of my playbooks.
 
 Example Playbook
 ----------------
