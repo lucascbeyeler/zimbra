@@ -56,6 +56,7 @@ Role Variables
 * **zmnetwork:** set the network the Zimbra server is;
 * **zmlogologin:** Inform the path for your logo (Login Screen) - don't inform and no image will be applied;
 * **zmlogoapp:** Inform the path for your logo (Application Screen) - don't inform and no image will be applied;
+* **timezone:** inform the timezone the playbook should set in your server;
 
 Dependencies
 ------------
@@ -72,6 +73,7 @@ Example Playbook
          - role: lucascbeyeler.ansible-zimbra
            hostname: warudo
            domain: hollowbastion.com
+           timezone: America/Sao_Paulo
            zmpasswd: 123change
            zmnetwork: 192.168.122.0/24
            zmlogologin: /tmp/login.png
