@@ -2,12 +2,12 @@
 # correct package to install
 
 - name: Set the Playbook to Install Zimbra Collaboration 8.7 - Open Source Edition
-  set_fact: zmurl=https://files.zimbra.com/downloads/8.7.3_GA/
+  set_fact: zmurl=https://files.zimbra.com/downloads/8.7.4_GA/
 
 - name: Check if your distro is Ubuntu Server 16.04 LTS
-  set_fact: zmpkg=zcs-8.7.3_GA_1750.UBUNTU16_64.20170215042321
+  set_fact: zmpkg=zcs-8.7.4_GA_1730.UBUNTU16_64.20170227060845
   when: ansible_distribution_major_version|int >= 16
 
 - name: Check if your distro is Ubuntu Server 14.04 LTS
-  set_fact: zmpkg=zcs-8.7.3_GA_1750.UBUNTU14_64.20170215042321
+  set_fact: zmpkg=zcs-8.7.4_GA_1730.UBUNTU14_64.20170227060845
   when: ansible_distribution_major_version|int >= 14 and ansible_distribution_major_version|int <= 15
