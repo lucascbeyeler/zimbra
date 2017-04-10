@@ -4,7 +4,7 @@ Ansible-Zimbra
 Ansible role to install and configure Zimbra Collaboration Open Source Edition in a monoserver environment
 
 [![Build Status](https://travis-ci.org/lucascbeyeler/ansible-zimbra.svg?branch=master)](https://travis-ci.org/lucascbeyeler/ansible-zimbra)
-[![Zimbra Version](https://img.shields.io/badge/Zimbra-8.7.5-blue.svg)](https://www.zimbra.com/downloads/zimbra-collaboration-open-source/)
+[![Zimbra Version](https://img.shields.io/badge/Zimbra-8.7.6-blue.svg)](https://www.zimbra.com/downloads/zimbra-collaboration-open-source/)
 
 Requirements
 ------------
@@ -46,6 +46,7 @@ Features
 * Proxy Admin;
 * HTTP to HTTPS redirect;
 * LMTP Host Lookup in Native mode;
+* Chat and ownCloud plugin;
 
 
 Role Variables
