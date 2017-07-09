@@ -1,0 +1,28 @@
+---
+#
+# Products to be installed
+################################################################################
+zimbra-ldap: y
+zimbra-logger: y
+zimbra-mta: y
+zimbra-dnscache: n
+zimbra-snmp: n
+zimbra-store: y
+zimbra-apache: y
+zimbra-spell: y
+zimbra-memcached: y
+zimbra-proxy: y
+zimbra-chat: n
+zimbra-drive: n
+
+#
+# Zimbra configuration
+################################################################################
+
+hostname: localhost
+domain: localdomain
+zmpasswd: !23Change
+zmnetwork: 192.168.200.0/8
+zmlogologin:
+zmlogoapp:
+timezone: UTC

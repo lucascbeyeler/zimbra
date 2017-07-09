@@ -1,0 +1,20 @@
+---
+#
+# Main file
+################################################################################
+- name: Checking if there is an Zimbra OSE install already
+  command: getent passwd zimbra
+  register: getent_passwd
+
+- include: 'packages.yml'
+  when: getent_passwd.rc == 0
+
+- include: 'configure.yml'
+
+- include: 'extras/modify-logo.yml'
+  when: zmlogologin is defined and zmlogoapp is defined
+
+- name: 'Reloading Zimbra OSE Services'
+  command: zmcontrol restart
+  become: yes
+  become_user: zimbra

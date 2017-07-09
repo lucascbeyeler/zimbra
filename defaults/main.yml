@@ -1,0 +1,11 @@
+absent:
+  - postfix
+  - sendmail
+
+ubuntu:
+  - razor
+  - pyzor
+
+centos:
+  - pyzor
+  - perl-Razor-Agent

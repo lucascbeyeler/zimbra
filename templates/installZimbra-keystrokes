@@ -1,0 +1,15 @@
+y
+y
+{{ zimbra-ldap }}
+{{ zimbra-logger }}
+{{ zimbra-mta }}
+{{ zimbra-dnscache }}
+{{ zimbra-snmp }}
+{{ zimbra-store }}
+{{ zimbra-apache }}
+{{ zimbra-spell }}
+{{ zimbra-memcached }}
+{{ zimbra-proxy }}
+{{ zimbra-chat }}
+{{ zimbra-drive }}
+y

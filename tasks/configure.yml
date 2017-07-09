@@ -1,0 +1,132 @@
+---
+#
+# Configuring Zimbra OSE
+################################################################################
+- name: Configuring Zimbra OSE's services for use
+  command: ./zmsetup.pl -c /tmp/zcs/installZimbraScript
+  args:
+    chdir: /opt/zimbra/libexec/
+
+- name: Setting LMTP Host Lookup from DNS to Native
+  command: ./zmprov mcf zimbraMtaLmtpHostLookup native
+  args:
+    chdir: /opt/zimbra/bin/
+
+- name: Enabling Zimbra's admin tthrough Proxy Server
+  command: ./zmproxyconfig -e -w -C -H {{ hostname }}.{{ domain }}
+  args:
+    chdir: /opt/zimbra/libexec/
+  become: yes
+  become_user: zimbra
+
+- name: Enabling HTTP to HTTPS redirect
+  command: ./zmprov ms {{ hostname }}.{{ domain }} zimbraReverseProxyMailMode redirect
+  args:
+    chdir: /opt/zimbra/bin/
+
+#
+# Configuring SpamAssassin
+################################################################################
+- name: Downloading and Installing Kevin McGrail's Custom Rules
+  get_url:
+    url: https://www.pccc.com/downloads/SpamAssassin/contrib/KAM.cf
+    dest: /opt/zimbra/data/spamassassin/localrules/sakam.cf
+    mode: 0440
+    owner: zimbra
+    group: zimbra
+
+- name: Configuring sauser.cf With new Scores
+  copy:
+    src: sauser.cf
+    dest: /opt/zimbra/data/spamassassin/localrules/sauser.cf
+    owner: root
+    group: root
+    mode: 0440
+
+#
+# Configuring Pyzor
+################################################################################
+- name: Downloading and Configuring Pyzor's Anti-spam Base
+  shell: pyzor --homedir /opt/zimbra/data/amavisd/.pyzor discover
+  become: true
+  become_user: zimbra
+
+#
+# Configuring Razor
+################################################################################
+- name: Creating Razor's Anti-spam Base
+  shell: razor-admin -home=/opt/zimbra/data/amavisd/.razor -create
+  become: true
+  become_user: zimbra
+
+- name: Downloading Razor's Anti-spam Base
+  shell: razor-admin -home=/opt/zimbra/data/amavisd/.razor -discover
+  become: true
+  become_user: zimbra
+
+- name: Registering your Razor installation
+  shell: 'razor-admin -home=/opt/zimbra/data/amavisd/.razor -register'
+  become: true
+  become_user: zimbra
+
+#
+# Configuring RBLs
+################################################################################
+- name: Importing zen.spamhaus.org RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client zen.spamhaus.org'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+
+- name: Importing sbl.spamhaus.org RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client sbl.spamhaus.org'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+
+- name: Importing dsn.rfc-ignorant.org RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client dsn.rfc-ignorant.org'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+
+- name: Importing bl.spamcop.net RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client bl.spamcop.net'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+
+- name: Importing dnsbl.sorbs.net RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client dnsbl.sorbs.net'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+
+#
+# Configuring PolicyD
+################################################################################
+- name: Configuring PolicyD Database
+  copy:
+    src: 'config.php'
+    dest: /opt/zimbra/common/share/webui/includes/config.php
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Configuring PolicyD Web Interface
+  file:
+    src: /opt/zimbra/common/share/webui
+    dest: /opt/zimbra/data/httpd/htdocs/webui
+    state: link
+
+- name: Enable PolicyD Web Interface
+  lineinfile:
+    dest: /opt/zimbra/conf/httpd.conf
+    regexp: "^    DirectoryIndex index.html index.html.var"
+    line: "    DirectoryIndex index.html index.html.var index.php"
+    state: present

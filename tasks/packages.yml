@@ -1,0 +1,84 @@
+---
+#
+# Setting variables
+################################################################################
+- name: Loading the address to the most recent release of Zimbra OSE (8.7.11)
+  set_fact: zmurl=https://files.zimbra.com/downloads/8.7.11_GA/
+
+- name: Check if your distro is Ubuntu Server 16.04 LTS
+  set_fact: zmpkg=zcs-8.7.11_GA_1854.UBUNTU14_64.20170531151956
+  when: ansible_distribution_major_version|int >= 16
+
+- name: Check if your distro is Ubuntu Server 14.04 LTS
+  set_fact: zmpkg=zcs-8.7.11_GA_1854.UBUNTU14_64.20170531151956
+  when: ansible_distribution_major_version|int >= 14 and ansible_distribution_major_version|int <= 15
+
+- name: Check if your distro is Red Hat Enterprise Linux or CentOS (Major 6)
+  set_fact: zmpkg=zcs-8.7.11_GA_1854.RHEL6_64.20170531151956
+  when: ansible_distribution_major_version == "6"
+
+- name: Check if your distro is Red Hat Enterprise Linux or CentOS (Major 7)
+  set_fact: zmpkg=zcs-8.7.11_GA_1854.RHEL7_64.20170531151956
+  when: ansible_distribution_major_version == "7"
+
+#
+# Installing dependencies and removing other smtp servers
+################################################################################
+- name: Ensure Sendmail and Postfix is not installed
+  package:
+    name: {{ absent }}
+    state: absent
+
+- name: Ensure Pyzor and Razor is installed (CentOS/RedHat)
+  yum:
+    name: {{ centos }}
+    state: present
+
+- name: Ensure Pyzor and Razor is installed (Ubuntu)
+  apt:
+    name: {{ ubuntu }}
+    state: present
+
+#
+# Download and install Zimbra OSE
+################################################################################
+- name: Download and unpacking Zimbra OSE
+  unarchive:
+    validate_certs: no
+    src: '{{ zmurl }}{{ zmpkg }}.tgz'
+    dest: /usr/local/src/
+    copy: no
+
+- name: Create the folder to upload the scripts
+  file:
+    path: /tmp/zcs
+    state: directory
+
+- name: Uploading keystroke file
+  copy:
+    src: 'installZimbra-keystrokes'
+    dest: /tmp/zcs/installZimbra-keystrokes
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Uploading installer configuration file
+  template:
+    src: 'installZimbraScript.j2'
+    dest: /tmp/zcs/installZimbraScript
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Installing Zimbra OSE
+  command: ./install.sh -s < /tmp/zcs/installZimbra-keystrokes
+  args:
+    chdir: '/usr/local/src/{{ zmpkg }}/'
+
+#
+# Install PolicyD
+################################################################################
+- name: Installing PolicyD Service
+  shell: ./zmprov ms {{ hostname }}.{{ domain }} +zimbraServiceInstalled cbpolicyd +zimbraServiceEnabled cbpolicyd
+  args:
+    chdir: /opt/zimbra/bin/
