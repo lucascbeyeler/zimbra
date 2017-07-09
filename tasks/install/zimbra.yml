@@ -15,7 +15,7 @@
     state: directory
 
 - name: Uploading keystroke file
-  copy:
+  template:
     src: 'installZimbra-keystrokes'
     dest: /tmp/zcs/installZimbra-keystrokes
     owner: root
