@@ -39,6 +39,8 @@
 # Restarting Zimbra
 ################################################################################
 - name: 'Reloading Zimbra OSE Services'
-  command: zmcontrol restart
+  command: ./zmcontrol restart
+  args:
+    chdir: '/opt/zimbra/bin/'
   become: yes
   become_user: zimbra
