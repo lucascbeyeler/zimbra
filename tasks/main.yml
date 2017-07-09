@@ -11,13 +11,13 @@
 # Installation process
 ################################################################################
 - include: 'install/vars.yml'
-  when: getent_passwd.rc == 0
+  when: getent_passwd.rc == 2
 - include: 'install/dependencies.yml'
-  when: getent_passwd.rc == 0
+  when: getent_passwd.rc == 2
 - include: 'install/zimbra.yml'
-  when: getent_passwd.rc == 0
+  when: getent_passwd.rc == 2
 - include: 'install/policyd.yml'
-  when: getent_passwd.rc == 0 and zimbra-policyd == 'y'
+  when: getent_passwd.rc == 2 and zimbra-policyd == 'y'
 
 #
 # Configuration process
