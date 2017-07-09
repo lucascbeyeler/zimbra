@@ -3,7 +3,7 @@
   remote_user: root
   roles:
 
-   - role: ansible-zimbra
+   - role: zimbra
      hostname: localhost
      domain: localdomain
      zmpasswd: 123change
