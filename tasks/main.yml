@@ -44,3 +44,4 @@
     chdir: '/opt/zimbra/bin/'
   become: yes
   become_user: zimbra
+  ignore_errors: true
