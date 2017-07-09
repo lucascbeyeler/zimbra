@@ -2,19 +2,19 @@
 #
 # Products to be installed
 ################################################################################
-zimbra-ldap: y
-zimbra-logger: y
-zimbra-mta: y
-zimbra-dnscache: n
-zimbra-snmp: n
-zimbra-store: y
-zimbra-apache: y
-zimbra-spell: y
-zimbra-memcached: y
-zimbra-proxy: y
-zimbra-chat: n
-zimbra-drive: n
-zimbra-policyd: n
+zimbra_ldap: y
+zimbra_logger: y
+zimbra_mta: y
+zimbra_dnscache: n
+zimbra_snmp: n
+zimbra_store: y
+zimbra_apache: y
+zimbra_spell: y
+zimbra_memcached: y
+zimbra_proxy: y
+zimbra_chat: n
+zimbra_drive: n
+zimbra_policyd: n
 
 #
 # Zimbra configuration
