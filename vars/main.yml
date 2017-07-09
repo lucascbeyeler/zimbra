@@ -24,6 +24,4 @@ hostname: "localhost"
 domain: "localdomain"
 zmpasswd: "!23Change"
 zmnetwork: "192.168.200.0/8"
-zmlogologin:
-zmlogoapp:
 timezone: UTC
