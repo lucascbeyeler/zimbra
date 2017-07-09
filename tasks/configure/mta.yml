@@ -54,12 +54,14 @@
     owner: root
     group: root
     mode: 0644
+  when: zimbra_policyd == 'y'
 
 - name: Configuring PolicyD Web Interface
   file:
     src: /opt/zimbra/common/share/webui
     dest: /opt/zimbra/data/httpd/htdocs/webui
     state: link
+  when: zimbra_policyd == 'y'
 
 - name: Enable PolicyD Web Interface
   lineinfile:
@@ -67,3 +69,4 @@
     regexp: "^    DirectoryIndex index.html index.html.var"
     line: "    DirectoryIndex index.html index.html.var index.php"
     state: present
+  when: zimbra_policyd == 'y'

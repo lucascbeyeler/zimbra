@@ -17,7 +17,7 @@
 - include: 'install/zimbra.yml'
   when: getent_passwd.rc == 2
 - include: 'install/policyd.yml'
-  when: getent_passwd.rc == 2 and zimbra-policyd == 'y'
+  when: getent_passwd.rc == 2 and zimbra_policyd == 'y'
 
 #
 # Configuration process
