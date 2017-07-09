@@ -13,3 +13,46 @@
   command: ./zmprov ms {{ hostname }}.{{ domain }} zimbraReverseProxyMailMode redirect
   args:
     chdir: /opt/zimbra/bin/
+
+- name: Setting LMTP Host Lookup from DNS to Native
+  command: ./zmprov mcf zimbraMtaLmtpHostLookup native
+  args:
+    chdir: /opt/zimbra/bin/
+
+#
+# Configuring RBLs
+################################################################################
+- name: Importing zen.spamhaus.org RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client zen.spamhaus.org'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+
+- name: Importing sbl.spamhaus.org RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client sbl.spamhaus.org'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+
+- name: Importing dsn.rfc-ignorant.org RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client dsn.rfc-ignorant.org'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+
+- name: Importing bl.spamcop.net RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client bl.spamcop.net'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+
+- name: Importing dnsbl.sorbs.net RBL
+  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client dnsbl.sorbs.net'
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra

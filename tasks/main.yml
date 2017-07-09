@@ -1,19 +1,42 @@
 ---
 #
-# Main file
+# Validations before run the playbook
 ################################################################################
 - name: Checking if there is an Zimbra OSE install already
   command: getent passwd zimbra
   register: getent_passwd
 
-- include: 'packages.yml'
+#
+# Installation process
+################################################################################
+- include: 'install/vars.yml'
   when: getent_passwd.rc == 0
+- include: 'install/dependencies.yml'
+  when: getent_passwd.rc == 0
+- include: 'install/zimbra.yml'
+  when: getent_passwd.rc == 0
+- include: 'install/policyd.yml'
+  when: getent_passwd.rc == 0 and zimbra-policyd == 'y'
 
-- include: 'configure.yml'
+#
+# Configuration process
+################################################################################
+- include: 'configure/proxy.yml'
+  when: zimbra-proxy == 'y'
+- include: 'configure/mailbox.yml'
+  when: zimbra-store == 'y'
+- include: 'configure/mta.yml'
+  when: zimbra-mta == 'y'
 
+#
+# Extras configuration process
+################################################################################
 - include: 'extras/modify-logo.yml'
   when: zmlogologin is defined and zmlogoapp is defined
 
+#
+# Restarting Zimbra
+################################################################################
 - name: 'Reloading Zimbra OSE Services'
   command: zmcontrol restart
   become: yes
