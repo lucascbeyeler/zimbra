@@ -5,28 +5,20 @@ Ansible role to install and configure Zimbra Collaboration Open Source Edition i
 
 [![Build Status](https://travis-ci.org/lucascbeyeler/ansible-zimbra.svg?branch=master)](https://travis-ci.org/lucascbeyeler/ansible-zimbra)
 [![Zimbra Version](https://img.shields.io/badge/Zimbra-8.7.11-blue.svg)](https://www.zimbra.com/downloads/zimbra-collaboration-open-source/)
-
+![Linux Distro](https://img.shields.io/badge/platform-CentOS%20%7C%20Red%20Hat%20%7C%20Ubuntu-blue.svg)
+![Branch](https://img.shields.io/badge/Branch-Master-green.svg)
+[![Ansible Version](https://img.shields.io/badge/Ansible-2.3.1.0-green.svg)](https://www.ansible.com/)
 Requirements
 ------------
 
-* [Ansible](https://github.com/ansible/ansible) 2.2.0 or superior. Less than this and you will have problems running Zimbra's Playbook. See ansible-modules-core Bug #4202
-
-* Configure de file /etc/ansible/ansible.cfg (create if don't exist) and set this options - not required if you using key and the ssh user is "root" already:
-```
-[defaults]
-host_key_checking=False
-stdout_callback=skippy
-
-[ssh_connection]
-pipelining=True
-```
+* [Ansible](https://github.com/ansible/ansible) 2.3.1.0 or superior.
 
 Install
 --------------
 ansible-zimbra is already in Ansible Galaxy, so the only thing you need to install this script in your machine is just use ansible-galaxy command:
 
 ```
-ansible-galaxy install lucascbeyeler.ansible-zimbra
+ansible-galaxy install lucascbeyeler.zimbra
 ```
 
 Update
@@ -34,7 +26,7 @@ Update
 When a new version of ansible-zimbra is released, you will need to run the install process again, but with the "-f" or "--force" parameter.
 
 ```
-ansible-galaxy install -f lucascbeyeler.ansible-zimbra
+ansible-galaxy install -f lucascbeyeler.zimbra
 ```
 
 Features
@@ -46,7 +38,7 @@ Features
 * Proxy Admin;
 * HTTP to HTTPS redirect;
 * LMTP Host Lookup in Native mode;
-* Chat and ownCloud plugin;
+* Customize your Zimbra OSE server;
 
 
 Role Variables
@@ -60,10 +52,27 @@ Role Variables
 * **zmlogoapp:** Inform the path for your logo (Application Screen) - don't inform and no image will be applied;
 * **timezone:** inform the timezone the playbook should set in your server;
 
+Service Variables - Inform "y" or "n"
+--------------
+
+* **zimbra_ldap:** Enable Zimbra LDAP Server - default: **y**
+* **zimbra_logger:** Enable Zimbra Logger Service - default: **y**
+* **zimbra_mta:**  Enable Zimbra MTA Service - default: **y**
+* **zimbra_dnscache:** Enable Zimbra DNS Cache Service (unbound) - default: **n**
+* **zimbra_snmp:**  Enable Zimbra SNMP Checks - default: **n**
+* **zimbra_store:**  Enable Zimbra Store Service - default: **y**
+* **zimbra_apache:**  Enable Zimbra Web Interface (Apache Web Server) - default: **y**
+* **zimbra_spell:**  Enable Zimbra Spell Check - default: **y**
+* **zimbra_memcached:**  Enable Zimbra Cache Service (Memcached) - default: **y**
+* **zimbra_proxy:**  Enable Zimbra Proxy Service - default: **y**
+* **zimbra_chat:**  Enable Zimbra Chat **BETA** - default: **n**
+* **zimbra_drive:**  Enable Zimbra ownCloud Drive **BETA** - default: **n**
+* **zimbra_policyd:**  Enable Zimbra PolicyD Service - default: **n**
+
 Dependencies
 ------------
 
-To run this playbook, you will need to run [lucascbeyeler.commons](https://github.com/lucascbeyeler/ansible-commons) too. We do not cover any kind of server preparation, like upgrade the system or change the hostname (even put the hostname in /etc/hosts is made by commons). The motive is because all my playbooks will need some kind of preparation before executed, so to not including the same code in every single project, I made a different playbook that will do everything that is considered "common" in each one of my playbooks.
+To run this playbook, you will need to run [lucascbeyeler.baseline](https://github.com/lucascbeyeler/baseline) too. We do not cover any kind of server preparation, like upgrade the system or change the hostname (even put the hostname in /etc/hosts is made by commons). The motive is because all my playbooks will need some kind of preparation before executed, so to not including the same code in every single project, I made a different playbook that will do everything that is considered "common" in each one of my playbooks.
 
 Example Playbook
 ----------------
