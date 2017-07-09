@@ -6,7 +6,7 @@
   set_fact: zmurl=https://files.zimbra.com/downloads/8.7.11_GA/
 
 - name: Check if your distro is Ubuntu Server 16.04 LTS
-  set_fact: zmpkg=zcs-8.7.11_GA_1854.UBUNTU14_64.20170531151956
+  set_fact: zmpkg=zcs-8.7.11_GA_1854.UBUNTU16_64.20170531151956
   when: ansible_distribution_major_version|int >= 16
 
 - name: Check if your distro is Ubuntu Server 14.04 LTS
