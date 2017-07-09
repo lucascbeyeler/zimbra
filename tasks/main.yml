@@ -17,17 +17,17 @@
 - include: 'install/zimbra.yml'
   when: getent_passwd.rc == 2
 - include: 'install/policyd.yml'
-  when: getent_passwd.rc == 2 and zimbra_policyd == 'y'
+  when: zimbra_policyd == 'y'
 
 #
 # Configuration process
 ################################################################################
 - include: 'configure/proxy.yml'
-  when: zimbra-proxy == 'y'
+  when: zimbra_proxy == 'y'
 - include: 'configure/mailbox.yml'
-  when: zimbra-store == 'y'
+  when: zimbra_store == 'y'
 - include: 'configure/mta.yml'
-  when: zimbra-mta == 'y'
+  when: zimbra_mta == 'y'
 
 #
 # Extras configuration process
