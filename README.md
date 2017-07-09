@@ -1,13 +1,14 @@
 Ansible-Zimbra
 =========
 
-Ansible role to install and configure Zimbra Collaboration Open Source Edition in a monoserver environment
+Ansible role to install and configure Zimbra Collaboration Open Source Edition
 
 [![Build Status](https://travis-ci.org/lucascbeyeler/ansible-zimbra.svg?branch=master)](https://travis-ci.org/lucascbeyeler/ansible-zimbra)
 [![Zimbra Version](https://img.shields.io/badge/Zimbra-8.7.11-blue.svg)](https://www.zimbra.com/downloads/zimbra-collaboration-open-source/)
 ![Linux Distro](https://img.shields.io/badge/platform-CentOS%20%7C%20Red%20Hat%20%7C%20Ubuntu-blue.svg)
 ![Branch](https://img.shields.io/badge/Branch-Master-green.svg)
 [![Ansible Version](https://img.shields.io/badge/Ansible-2.3.1.0-green.svg)](https://www.ansible.com/)
+
 Requirements
 ------------
 
@@ -32,6 +33,7 @@ ansible-galaxy install -f lucascbeyeler.zimbra
 Features
 --------------
 
+* Run many times you want to apply the configuration - installatin only occur if the server has no Zimbra installed
 * Configuring SpamAssassin, Pyzor and Razor;
 * Configure a logo for your server - **WARNING**: [Read this article for more details about the logo](https://blog.zimbra.com/2015/09/change-login-app-logo-open-source-network-edition/);
 * Enable PolicyD service and web admin;
