@@ -5,6 +5,7 @@
 - name: Checking if there is an Zimbra OSE install already
   command: getent passwd zimbra
   register: getent_passwd
+  ignore_errors: true
 
 #
 # Installation process
