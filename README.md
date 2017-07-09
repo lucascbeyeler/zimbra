@@ -1,4 +1,4 @@
-Ansible-Zimbra
+Zimbra
 =========
 
 Ansible role to install and configure Zimbra Collaboration Open Source Edition
