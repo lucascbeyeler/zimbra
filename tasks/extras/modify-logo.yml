@@ -21,21 +21,21 @@
     mode: 0644
 
 - name: Configure the Zimbra Server to find the new logos
-  shell: './zmprov md {{ domain }} zimbraSkinLogoURL https://{{ hostname }}.{{ domain }}'
+  command: './zmprov md {{ domain }} zimbraSkinLogoURL https://{{ hostname }}.{{ domain }}'
   args:
     chdir: /opt/zimbra/bin
   become: true
   become_user: zimbra
 
 - name: Configure the path for the login logo file
-  shell: './zmprov md {{ domain }} zimbraSkinLogoLoginBanner /img/logoLoginBanner.png'
+  command: './zmprov md {{ domain }} zimbraSkinLogoLoginBanner /img/logoLoginBanner.png'
   args:
     chdir: /opt/zimbra/bin
   become: true
   become_user: zimbra
 
 - name: Configure the path for the webmail logo file
-  shell: './zmprov md {{ domain }} zimbraSkinLogoAppBanner /img/logoAppBanner.png'
+  command: './zmprov md {{ domain }} zimbraSkinLogoAppBanner /img/logoAppBanner.png'
   args:
     chdir: /opt/zimbra/bin
   become: true

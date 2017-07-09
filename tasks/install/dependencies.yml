@@ -4,15 +4,15 @@
 ################################################################################
 - name: Ensure Sendmail and Postfix is not installed
   package:
-    name: {{ absent }}
+    name: "{{ absent }}"
     state: absent
 
 - name: Ensure Pyzor and Razor is installed (CentOS/RedHat)
   yum:
-    name: {{ centos }}
+    name: "{{ centos }}"
     state: present
 
 - name: Ensure Pyzor and Razor is installed (Ubuntu)
   apt:
-    name: {{ ubuntu }}
+    name: "{{ ubuntu }}"
     state: present

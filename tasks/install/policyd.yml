@@ -3,6 +3,6 @@
 # Install PolicyD
 ################################################################################
 - name: Installing PolicyD Service
-  shell: ./zmprov ms {{ hostname }}.{{ domain }} +zimbraServiceInstalled cbpolicyd +zimbraServiceEnabled cbpolicyd
+  command: ./zmprov ms "{{ hostname }}"."{{ domain }}" +zimbraServiceInstalled cbpolicyd +zimbraServiceEnabled cbpolicyd
   args:
     chdir: /opt/zimbra/bin/

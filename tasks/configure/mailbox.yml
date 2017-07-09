@@ -2,15 +2,8 @@
 #
 # Configuring Zimbra OSE
 ################################################################################
-- name: Enabling Zimbra's admin through Proxy Server
-  command: ./zmproxyconfig -e -w -C -H {{ hostname }}.{{ domain }}
-  args:
-    chdir: /opt/zimbra/libexec/
-  become: yes
-  become_user: zimbra
-
 - name: Enabling HTTP to HTTPS redirect
-  command: ./zmprov ms {{ hostname }}.{{ domain }} zimbraReverseProxyMailMode redirect
+  command: ./zmprov ms "{{ hostname }}"."{{ domain }}" zimbraReverseProxyMailMode redirect
   args:
     chdir: /opt/zimbra/bin/
 
@@ -23,35 +16,35 @@
 # Configuring RBLs
 ################################################################################
 - name: Importing zen.spamhaus.org RBL
-  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client zen.spamhaus.org'
+  command: ./zmprov ms "{{hostname}}"."{{domain}}" +zimbraMtaRestriction 'reject_rbl_client zen.spamhaus.org'
   args:
     chdir: /opt/zimbra/bin/
   become: true
   become_user: zimbra
 
 - name: Importing sbl.spamhaus.org RBL
-  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client sbl.spamhaus.org'
+  command: ./zmprov ms "{{hostname}}"."{{domain}}" +zimbraMtaRestriction 'reject_rbl_client sbl.spamhaus.org'
   args:
     chdir: /opt/zimbra/bin/
   become: true
   become_user: zimbra
 
 - name: Importing dsn.rfc-ignorant.org RBL
-  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client dsn.rfc-ignorant.org'
+  command: ./zmprov ms "{{hostname}}"."{{domain}}" +zimbraMtaRestriction 'reject_rbl_client dsn.rfc-ignorant.org'
   args:
     chdir: /opt/zimbra/bin/
   become: true
   become_user: zimbra
 
 - name: Importing bl.spamcop.net RBL
-  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client bl.spamcop.net'
+  command: ./zmprov ms "{{hostname}}"."{{domain}}" +zimbraMtaRestriction 'reject_rbl_client bl.spamcop.net'
   args:
     chdir: /opt/zimbra/bin/
   become: true
   become_user: zimbra
 
 - name: Importing dnsbl.sorbs.net RBL
-  shell: ./zmprov ms {{hostname}}.{{domain}} +zimbraMtaRestriction 'reject_rbl_client dnsbl.sorbs.net'
+  command: ./zmprov ms "{{hostname}}"."{{domain}}" +zimbraMtaRestriction 'reject_rbl_client dnsbl.sorbs.net'
   args:
     chdir: /opt/zimbra/bin/
   become: true

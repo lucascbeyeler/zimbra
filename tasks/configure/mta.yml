@@ -22,7 +22,7 @@
 # Configuring Pyzor
 ################################################################################
 - name: Downloading and Configuring Pyzor's Anti-spam Base
-  shell: pyzor --homedir /opt/zimbra/data/amavisd/.pyzor discover
+  command: pyzor --homedir /opt/zimbra/data/amavisd/.pyzor discover
   become: true
   become_user: zimbra
 
@@ -30,17 +30,17 @@
 # Configuring Razor
 ################################################################################
 - name: Creating Razor's Anti-spam Base
-  shell: razor-admin -home=/opt/zimbra/data/amavisd/.razor -create
+  command: razor-admin -home=/opt/zimbra/data/amavisd/.razor -create
   become: true
   become_user: zimbra
 
 - name: Downloading Razor's Anti-spam Base
-  shell: razor-admin -home=/opt/zimbra/data/amavisd/.razor -discover
+  command: razor-admin -home=/opt/zimbra/data/amavisd/.razor -discover
   become: true
   become_user: zimbra
 
 - name: Registering your Razor installation
-  shell: 'razor-admin -home=/opt/zimbra/data/amavisd/.razor -register'
+  command: 'razor-admin -home=/opt/zimbra/data/amavisd/.razor -register'
   become: true
   become_user: zimbra
 
