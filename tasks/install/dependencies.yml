@@ -1,0 +1,18 @@
+---
+#
+# Installing dependencies and removing other smtp servers
+################################################################################
+- name: Ensure Sendmail and Postfix is not installed
+  package:
+    name: {{ absent }}
+    state: absent
+
+- name: Ensure Pyzor and Razor is installed (CentOS/RedHat)
+  yum:
+    name: {{ centos }}
+    state: present
+
+- name: Ensure Pyzor and Razor is installed (Ubuntu)
+  apt:
+    name: {{ ubuntu }}
+    state: present

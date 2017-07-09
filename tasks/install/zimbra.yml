@@ -1,0 +1,36 @@
+---
+#
+# Download and install Zimbra OSE
+################################################################################
+- name: Download and unpacking Zimbra OSE
+  unarchive:
+    validate_certs: no
+    src: '{{ zmurl }}{{ zmpkg }}.tgz'
+    dest: /usr/local/src/
+    copy: no
+
+- name: Create the folder to upload the scripts
+  file:
+    path: /tmp/zcs
+    state: directory
+
+- name: Uploading keystroke file
+  copy:
+    src: 'installZimbra-keystrokes'
+    dest: /tmp/zcs/installZimbra-keystrokes
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Uploading installer configuration file
+  template:
+    src: 'installZimbraScript.j2'
+    dest: /tmp/zcs/installZimbraScript
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Installing Zimbra OSE
+  command: ./install.sh -s < /tmp/zcs/installZimbra-keystrokes
+  args:
+    chdir: '/usr/local/src/{{ zmpkg }}/'

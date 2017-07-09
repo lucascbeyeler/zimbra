@@ -1,0 +1,21 @@
+galaxy_info:
+  author: Lucas Costa Beyeler
+  description: Ansible role to install and configure Zimbra Collaboration Open Source Edition
+  company: Beyeler
+  license: GPLv3
+  min_ansible_version: 2.3
+  github_branch: master
+  platforms:
+  - name: Ubuntu
+    versions:
+    - trusty
+    - xenial
+  - name: EL
+    versions:
+    - 6
+    - 7
+  galaxy_tags:
+    - zimbra
+    - community
+dependencies:
+  - { role: lucascbeyeler.baseline }

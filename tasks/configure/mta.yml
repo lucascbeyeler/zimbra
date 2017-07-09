@@ -1,0 +1,8 @@
+---
+#
+# Configuring Zimbra OSE
+################################################################################
+- name: Setting LMTP Host Lookup from DNS to Native
+  command: ./zmprov mcf zimbraMtaLmtpHostLookup native
+  args:
+    chdir: /opt/zimbra/bin/
