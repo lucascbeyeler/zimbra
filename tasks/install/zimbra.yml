@@ -2,12 +2,12 @@
 #
 # Download and install Zimbra OSE
 ################################################################################
-# - name: Download and unpacking Zimbra OSE
-#   unarchive:
-#     validate_certs: no
-#     src: '{{ zmurl }}{{ zmpkg }}.tgz'
-#     dest: /usr/local/src/
-#     copy: no
+- name: Download and unpacking Zimbra OSE
+  unarchive:
+    validate_certs: no
+    src: '{{ zmurl }}{{ zmpkg }}.tgz'
+    dest: /usr/local/src/
+    copy: no
 
 - name: Create the folder to upload the scripts
   file:
