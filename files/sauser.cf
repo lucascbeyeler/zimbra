@@ -6,6 +6,12 @@ pyzor_timeout 20
 # Razor's Config - Change only if you know what are you doing
 use_razor2 1
 
+# Enabling Bayesian mail filtering
+use_bayes 1
+score BAYES_99 4.300
+score BAYES_90 3.500
+score BAYES_80 3.000
+
 #SpamAssassin's Scores - Change THIS file and not salocal.cf
 
 score ALL_TRUSTED -4.000
@@ -61,3 +67,4 @@ score T_URL_SHORTENER 0.400
 score BAD_ENC_HEADER 0.400
 score T_UNKNOWN_ORIGIN 0.700
 score RP_MATCHES_RCVD -0.000
+score 
