@@ -8,9 +8,11 @@ use_razor2 1
 
 # Enabling Bayesian mail filtering
 use_bayes 1
-score BAYES_99 4.300
-score BAYES_90 3.500
-score BAYES_80 3.000
+score BAYES_90 4.300
+score BAYES_80 3.500
+score BAYES_60 3.000
+score BAYES_50 2.500
+score BAYES_00 -0.500
 
 #SpamAssassin's Scores - Change THIS file and not salocal.cf
 
