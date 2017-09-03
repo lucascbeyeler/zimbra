@@ -83,7 +83,7 @@ Example Playbook
       become: yes
       become_method: sudo
       roles:
-         - role: lucascbeyeler.ansible-zimbra
+         - role: lucascbeyeler.zimbra
            hostname: warudo
            domain: hollowbastion.com
            timezone: America/Sao_Paulo
