@@ -17,6 +17,21 @@
     owner: root
     group: root
     mode: 0440
+    
+- name: Enabling SpamAssassin Auto Update
+  command: zmlocalconfig -e antispam_enable_rule_updates=true
+  become: true
+  become_user: zimbra
+    
+- name: Enabling Amavis to restart when the rules are update
+  command: zmlocalconfig -e antispam_enable_restarts=true
+  become: true
+  become_user: zimbra
+
+- name: Enabling SpamAssassin rule compilation
+  command: zmlocalconfig -e antispam_enable_rule_compilation=true
+  become: true
+  become_user: zimbra
 
 #
 # Configuring Pyzor
