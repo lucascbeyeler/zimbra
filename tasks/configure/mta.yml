@@ -19,17 +19,23 @@
     mode: 0440
     
 - name: Enabling SpamAssassin Auto Update
-  command: zmlocalconfig -e antispam_enable_rule_updates=true
+  command: ./zmlocalconfig -e antispam_enable_rule_updates=true
+  args:
+    chdir: /opt/zimbra/bin/
   become: true
   become_user: zimbra
     
 - name: Enabling Amavis to restart when the rules are update
-  command: zmlocalconfig -e antispam_enable_restarts=true
+  command: ./zmlocalconfig -e antispam_enable_restarts=true
+  args:
+    chdir: /opt/zimbra/bin/
   become: true
   become_user: zimbra
 
 - name: Enabling SpamAssassin rule compilation
-  command: zmlocalconfig -e antispam_enable_rule_compilation=true
+  command: ./zmlocalconfig -e antispam_enable_rule_compilation=true
+  args:
+    chdir: /opt/zimbra/bin/
   become: true
   become_user: zimbra
 
