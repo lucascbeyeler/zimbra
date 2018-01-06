@@ -39,3 +39,17 @@
   command: ./zmsetup.pl -c /tmp/zcs/installZimbraScript
   args:
     chdir: /opt/zimbra/libexec/
+
+#
+# BUGFIX WORKAROUND - Zimbra 8.8.5 does not work without configuring the hostname
+################################################################################
+
+- name: Configuring Zimbra Hostname for Domain {{ domain }}
+  command: ./zmprov md {{ domain }} zimbraVirtualHostname {{ hostname }}.{{ domain }}
+  args:
+    chdir: /opt/zimbra/bin/
+
+- name: Reloading Proxy configuration
+  command: ./zmproxyconfgen
+  args:
+    chdir: /opt/zimbra/libexec/
