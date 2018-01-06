@@ -7,12 +7,12 @@ Ansible role to install and configure Zimbra Collaboration Open Source Edition
 [![Zimbra Version](https://img.shields.io/badge/Zimbra-8.8.5-blue.svg)](https://www.zimbra.com/downloads/zimbra-collaboration-open-source/)
 ![Linux Distro](https://img.shields.io/badge/platform-CentOS%20%7C%20Red%20Hat%20%7C%20Ubuntu-blue.svg)
 ![Branch](https://img.shields.io/badge/Branch-Master-green.svg)
-[![Ansible Version](https://img.shields.io/badge/Ansible-2.3.1.0-green.svg)](https://www.ansible.com/)
+[![Ansible Version](https://img.shields.io/badge/Ansible-2.4.2.0-green.svg)](https://www.ansible.com/)
 
 Requirements
 ------------
 
-* [Ansible](https://github.com/ansible/ansible) 2.3.1.0 or superior.
+* [Ansible](https://github.com/ansible/ansible) 2.4.2.0 or high.
 
 Install
 --------------
