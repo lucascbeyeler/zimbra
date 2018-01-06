@@ -10,29 +10,29 @@
 #
 # Installation process
 ################################################################################
-- include: 'install/vars.yml'
+- import_tasks: 'install/vars.yml'
   when: getent_passwd.rc == 2
-- include: 'install/dependencies.yml'
+- import_tasks: 'install/dependencies.yml'
   when: getent_passwd.rc == 2
-- include: 'install/zimbra.yml'
+- import_tasks: 'install/zimbra.yml'
   when: getent_passwd.rc == 2
-- include: 'install/policyd.yml'
+- import_tasks: 'install/policyd.yml'
   when: zimbra_policyd == 'y'
 
 #
 # Configuration process
 ################################################################################
-- include: 'configure/proxy.yml'
+- import_tasks: 'configure/proxy.yml'
   when: zimbra_proxy == 'y'
-- include: 'configure/mailbox.yml'
+- import_tasks: 'configure/mailbox.yml'
   when: zimbra_store == 'y'
-- include: 'configure/mta.yml'
+- import_tasks: 'configure/mta.yml'
   when: zimbra_mta == 'y'
 
 #
 # Extras configuration process
 ################################################################################
-- include: 'extras/modify-logo.yml'
+- import_tasks: 'extras/modify-logo.yml'
   when: zmlogologin is defined and zmlogoapp is defined
 
 #
