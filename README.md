@@ -4,7 +4,7 @@ Zimbra
 Ansible role to install and configure Zimbra Collaboration Open Source Edition
 
 [![Build Status](https://travis-ci.org/lucascbeyeler/zimbra.svg?branch=master)](https://travis-ci.org/lucascbeyeler/zimbra)
-[![Zimbra Version](https://img.shields.io/badge/Zimbra-8.7.11-blue.svg)](https://www.zimbra.com/downloads/zimbra-collaboration-open-source/)
+[![Zimbra Version](https://img.shields.io/badge/Zimbra-8.8-blue.svg)](https://www.zimbra.com/downloads/zimbra-collaboration-open-source/)
 ![Linux Distro](https://img.shields.io/badge/platform-CentOS%20%7C%20Red%20Hat%20%7C%20Ubuntu-blue.svg)
 ![Branch](https://img.shields.io/badge/Branch-Master-green.svg)
 [![Ansible Version](https://img.shields.io/badge/Ansible-2.3.1.0-green.svg)](https://www.ansible.com/)
@@ -67,8 +67,9 @@ Service Variables - Inform "y" or "n"
 * **zimbra_spell:**  Enable Zimbra Spell Check - default: **y**
 * **zimbra_memcached:**  Enable Zimbra Cache Service (Memcached) - default: **y**
 * **zimbra_proxy:**  Enable Zimbra Proxy Service - default: **y**
-* **zimbra_chat:**  Enable Zimbra Chat **BETA** - default: **n**
-* **zimbra_drive:**  Enable Zimbra ownCloud Drive **BETA** - default: **n**
+* **zimbra_chat:**  Enable Zimbra Chat - default: **n**
+* **zimbra_drive:**  Enable Zimbra ownCloud Drive - default: **n**
+* **zimbra_imapd:** Enable Zimbra IMAPD Solo Service **BETA**  - default: **n**
 * **zimbra_policyd:**  Enable Zimbra PolicyD Service - default: **n**
 
 Dependencies

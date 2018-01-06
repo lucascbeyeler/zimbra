@@ -12,4 +12,5 @@ y
 {{ zimbra_proxy }}
 {{ zimbra_chat }}
 {{ zimbra_drive }}
+{{ zimbra_imapd }}
 y

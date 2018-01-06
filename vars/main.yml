@@ -14,6 +14,7 @@ zimbra_memcached: y
 zimbra_proxy: y
 zimbra_chat: n
 zimbra_drive: n
+zimbra_imapd: n
 zimbra_policyd: n
 
 #
