@@ -53,6 +53,7 @@ Role Variables
 * **zmlogologin:** Inform the path for your logo (Login Screen) - don't inform and no image will be applied;
 * **zmlogoapp:** Inform the path for your logo (Application Screen) - don't inform and no image will be applied;
 * **timezone:** inform the timezone the playbook should set in your server;
+* **ip_address:** inform the server's ip address - See [ZCS 8.8 upgrade Proxy port problem](https://forums.zimbra.org/viewtopic.php?f=15&t=62695)
 
 Service Variables - Inform "y" or "n"
 --------------
@@ -90,6 +91,7 @@ Example Playbook
            timezone: America/Sao_Paulo
            zmpasswd: 123change
            zmnetwork: 192.168.122.0/24
+           ip_address: 192.168.122.192
            zmlogologin: /tmp/login.png
            zmlogoapp: /tmp/app.png
 ```
