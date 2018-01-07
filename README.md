@@ -1,7 +1,7 @@
 Zimbra
 =========
 
-Ansible role to install and configure Zimbra Collaboration Open Source Edition
+Non-Official ansible role to install and configure Zimbra Collaboration Open Source Edition on Red Hat, CentOS and Ubuntu Server.
 
 [![Build Status](https://travis-ci.org/lucascbeyeler/zimbra.svg?branch=master)](https://travis-ci.org/lucascbeyeler/zimbra)
 [![Zimbra Version](https://img.shields.io/badge/Zimbra-8.8.5-blue.svg)](https://www.zimbra.com/downloads/zimbra-collaboration-open-source/)
@@ -16,7 +16,7 @@ Requirements
 
 Install
 --------------
-ansible-zimbra is already in Ansible Galaxy, so the only thing you need to install this script in your machine is just use ansible-galaxy command:
+Zimbra is already in Ansible Galaxy, so the only thing you need to install this script in your machine is just use ansible-galaxy command:
 
 ```
 ansible-galaxy install lucascbeyeler.zimbra
