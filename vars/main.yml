@@ -26,4 +26,3 @@ domain: "localdomain"
 zmpasswd: "!23Change"
 zmnetwork: "192.168.200.0/8"
 timezone: UTC
-ip_address: "127.0.0.1"
