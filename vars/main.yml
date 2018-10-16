@@ -26,3 +26,8 @@ domain: "localdomain"
 zmpasswd: "!23Change"
 zmnetwork: "192.168.200.0/8"
 timezone: UTC
+
+#
+# Zimbra configuration
+################################################################################
+zimbra_version: 8.8.10
