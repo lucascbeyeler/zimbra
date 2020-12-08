@@ -30,4 +30,4 @@ timezone: UTC
 #
 # Zimbra configuration
 ################################################################################
-zimbra_version: 8.8.12
+zimbra_version: 8.8.15
