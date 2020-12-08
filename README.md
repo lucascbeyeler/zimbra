@@ -4,15 +4,15 @@ Zimbra
 Non-Official ansible role to install and configure Zimbra Collaboration Open Source Edition on Red Hat, CentOS and Ubuntu Server.
 
 [![Build Status](https://travis-ci.org/lucascbeyeler/zimbra.svg?branch=master)](https://travis-ci.org/lucascbeyeler/zimbra)
-[![Zimbra Version](https://img.shields.io/badge/Zimbra-8.8.12-blue.svg)](https://www.zimbra.com/downloads/zimbra-collaboration-open-source/)
+[![Zimbra Version](https://img.shields.io/badge/Zimbra-8.8.15-blue.svg)](https://www.zimbra.com/downloads/zimbra-collaboration-open-source/)
 ![Linux Distro](https://img.shields.io/badge/platform-CentOS%20%7C%20Red%20Hat%20%7C%20Ubuntu-blue.svg)
 ![Branch](https://img.shields.io/badge/Branch-Master-green.svg)
-[![Ansible Version](https://img.shields.io/badge/Ansible-2.4.2.0-green.svg)](https://www.ansible.com/)
+[![Ansible Version](https://img.shields.io/badge/Ansible-2.9.6-green.svg)](https://www.ansible.com/)
 
 Requirements
 ------------
 
-* [Ansible](https://github.com/ansible/ansible) 2.4.2.0 or high.
+* [Ansible](https://github.com/ansible/ansible) 2.9.6 or high.
 
 Install
 --------------

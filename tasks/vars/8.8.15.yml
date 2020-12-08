@@ -3,24 +3,28 @@
 # Setting variables
 ################################################################################
 - name: Loading the address to the most recent release of Zimbra OSE (8.8.12)
-  set_fact: zmurl=https://files.zimbra.com/downloads/8.8.12_GA/
+  set_fact: zmurl=https://files.zimbra.com/downloads/8.8.15_GA/
 
 - name: Check if your distro is Ubuntu Server 16.04 LTS
-  set_fact: zmpkg=zcs-8.8.12_GA_3794.UBUNTU16_64.20190329045002
-  when: ansible_distribution_major_version|int >= 16
+  set_fact: zmpkg=zcs-8.8.15_GA_3869.UBUNTU16_64.20190918004220
+  when: ansible_distribution_major_version|int >= 16 and ansible_distribution_major_version|int <= 17
 
 - name: Check if your distro is Ubuntu Server 18.04 LTS
-  set_fact: zmpkg=zcs-8.8.12_GA_3794.UBUNTU18_64.20190329045002
+  set_fact: zmpkg=zcs-8.8.15_GA_3869.UBUNTU18_64.20190918004220
   when: ansible_distribution_major_version|int >= 18
 
 - name: Check if your distro is Ubuntu Server 14.04 LTS
-  set_fact: zmpkg=zcs-8.8.12_GA_3794.UBUNTU14_64.20190329045002
+  set_fact: zmpkg=zcs-8.8.15_GA_3869.UBUNTU14_64.20190918004220
   when: ansible_distribution_major_version|int >= 14 and ansible_distribution_major_version|int <= 15
 
 - name: Check if your distro is Red Hat Enterprise Linux or CentOS (Major 6)
-  set_fact: zmpkg=zcs-8.8.12_GA_3794.RHEL6_64.20190329045002
+  set_fact: zmpkg=zcs-8.8.15_GA_3869.RHEL6_64.20190918004220
   when: ansible_distribution_major_version == "6"
 
 - name: Check if your distro is Red Hat Enterprise Linux or CentOS (Major 7)
-  set_fact: zmpkg=zcs-8.8.12_GA_3794.RHEL7_64.20190329045002
+  set_fact: zmpkg=zcs-8.8.15_GA_3869.RHEL7_64.20190918004220
   when: ansible_distribution_major_version == "7"
+
+- name: Check if your distro is Red Hat Enterprise Linux or CentOS (Major 8)
+  set_fact: zmpkg=zcs-8.8.15_GA_3953.RHEL8_64.20200629025823
+  when: ansible_distribution_major_version == "8"
