@@ -3,7 +3,7 @@ galaxy_info:
   description: Ansible role to install and configure Zimbra Collaboration Open Source Edition
   company: Beyeler
   license: GPLv3
-  min_ansible_version: 2.4
+  min_ansible_version: 2.9.6
   github_branch: master
   platforms:
   - name: Ubuntu
