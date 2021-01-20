@@ -37,6 +37,8 @@ domain: "localdomain"
 zmpasswd: "!23Change"
 zmnetwork: "192.168.200.0/8"
 timezone: UTC
+#hosts_lines:
+#  - "198.162.1.3 {{ hostname }}.{{ domain }} {{ hostname }}" 
 
 #
 # Zimbra configuration
