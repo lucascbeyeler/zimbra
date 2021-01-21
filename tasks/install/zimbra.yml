@@ -2,6 +2,15 @@
 #
 # Download and install Zimbra OSE
 ################################################################################
+
+- name: Update /etc/hosts
+  lineinfile:
+    path: /etc/hosts 
+    line: "{{ item }}" 
+    state: present
+  with_items: "{{ hosts_lines }}"
+  when: hosts_lines is defined
+  
 - name: Download and unpacking Zimbra OSE
   unarchive:
     validate_certs: no
