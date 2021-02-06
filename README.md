@@ -53,7 +53,7 @@ Role Variables
 * **zmlogologin:** Inform the path for your logo (Login Screen) - don't inform and no image will be applied;
 * **zmlogoapp:** Inform the path for your logo (Application Screen) - don't inform and no image will be applied;
 * **timezone:** inform the timezone the playbook should set in your server;
-* **zimbra_version:** Inform which version of Zimbra you want to install. Default: 8.8.12
+* **zimbra_version:** Inform which version of Zimbra you want to install. Default: 8.8.15
 
 Service Variables - Inform "y" or "n"
 --------------
