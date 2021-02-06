@@ -9,3 +9,39 @@ ubuntu:
 centos:
   - pyzor
   - perl-Razor-Agent
+
+#
+# Products to be installed
+################################################################################
+zimbra_ldap: y
+zimbra_logger: y
+zimbra_mta: y
+zimbra_dnscache: n
+zimbra_snmp: n
+zimbra_store: y
+zimbra_apache: y
+zimbra_spell: y
+zimbra_memcached: y
+zimbra_proxy: y
+zimbra_chat: n
+zimbra_drive: n
+zimbra_imapd: n
+zimbra_policyd: n
+
+#
+# Zimbra configuration
+################################################################################
+
+hostname: "localhost"
+domain: "localdomain"
+zmpasswd: "!23Change"
+zmnetwork: "192.168.200.0/8"
+timezone: UTC
+#hosts_lines:
+#  - "198.162.1.3 {{ hostname }}.{{ domain }} {{ hostname }}" 
+
+#
+# Zimbra configuration
+################################################################################
+zimbra_version: 8.8.15
+
