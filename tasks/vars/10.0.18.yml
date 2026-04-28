@@ -1,0 +1,22 @@
+---
+#
+# Setting variables
+################################################################################
+- name: Loading the address of Zimbra OSE (10.1.15)
+  set_fact: zmurl=https://files-ose.s3.sa-east-1.amazonaws.com/
+
+- name: Check if your distro is Ubuntu Server 20.04 LTS
+  set_fact: zmpkg=zcs-10.0.18_GA_0425.UBUNTU20_64.20251210170904
+  when: ansible_distribution_major_version|int >= 20 and ansible_distribution_major_version|int <= 21
+
+- name: Check if your distro is Ubuntu Server 22.04 LTS
+  set_fact: zmpkg=zcs-10.0.18_GA_0425.UBUNTU22_64.20251210133842
+  when: ansible_distribution_major_version|int >= 22 and ansible_distribution_major_version|int <= 23
+
+- name: Check if your distro is Red Hat Enterprise Linux or CentOS (Major 8)
+  set_fact: zmpkg=zcs-10.0.18_GA_0425.RHEL8_64.20251209183322
+  when: ansible_distribution_major_version == "8"
+
+- name: Check if your distro is Red Hat Enterprise Linux or CentOS (Major 9)
+  set_fact: zmpkg=zcs-10.0.18_GA_0425.RHEL9_64.20251125103358
+  when: ansible_distribution_major_version == "9"
