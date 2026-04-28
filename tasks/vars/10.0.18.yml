@@ -2,7 +2,7 @@
 #
 # Setting variables
 ################################################################################
-- name: Loading the address of Zimbra OSE (10.1.15)
+- name: Loading the address of Zimbra OSE (10.0.18)
   set_fact: zmurl=https://files-ose.s3.sa-east-1.amazonaws.com/
 
 - name: Check if your distro is Ubuntu Server 20.04 LTS
