@@ -41,7 +41,50 @@ timezone: UTC
 #  - "198.162.1.3 {{ hostname }}.{{ domain }} {{ hostname }}" 
 
 #
-# Zimbra configuration
+# Zimbra repository
 ################################################################################
 zimbra_version: 8.8.15
 
+zm_repo:
+  8.8.15:
+    url: https://files.zimbra.com/downloads/8.8.15_GA/
+    builds:
+      ubuntu:
+        14: zcs-8.8.15_GA_3869.UBUNTU14_64.20190918004220
+        16: zcs-8.8.15_GA_3869.UBUNTU16_64.20190918004220
+        18: zcs-8.8.15_GA_3869.UBUNTU18_64.20190918004220
+        20: zcs-8.8.15_GA_4179.UBUNTU20_64.20211118033954
+      redhat:
+        6: zcs-8.8.15_GA_3869.RHEL6_64.20190918004220
+        7: zcs-8.8.15_GA_3869.RHEL7_64.20190918004220
+        8: zcs-8.8.15_GA_3953.RHEL8_64.20200629025823
+      centos:
+        6: zcs-8.8.15_GA_3869.RHEL6_64.20190918004220
+        7: zcs-8.8.15_GA_3869.RHEL7_64.20190918004220
+        8: zcs-8.8.15_GA_3953.RHEL8_64.20200629025823
+  
+  10.0.18:
+    url: https://files-ose.s3.sa-east-1.amazonaws.com/
+    builds:
+      ubuntu:
+        20: zcs-10.0.18_GA_0425.UBUNTU20_64.20251210170904
+        22: zcs-10.0.18_GA_0425.UBUNTU22_64.20251210133842
+      redhat:
+        8: zcs-10.0.18_GA_0425.RHEL8_64.20251209183322
+        9: zcs-10.0.18_GA_0425.RHEL9_64.20251125103358
+      centos:
+        8: zcs-10.0.18_GA_0425.RHEL8_64.20251209183322
+        9: zcs-10.0.18_GA_0425.RHEL9_64.20251125103358
+  
+  10.1.15:
+    url: https://files-ose.s3.sa-east-1.amazonaws.com/
+    builds:
+      ubuntu:
+        20: zcs-10.1.15_GA_0425.UBUNTU20_64.20251210203145
+        22: zcs-10.1.15_GA_0425.UBUNTU22_64.20251210151158
+      redhat:
+        8: zcs-10.1.15_GA_0425.RHEL8_64.20251209231445
+        9: zcs-10.1.15_GA_0425.RHEL9_64.20251125112827
+      centos:
+        8: zcs-10.1.15_GA_0425.RHEL8_64.20251209231445
+        9: zcs-10.1.15_GA_0425.RHEL9_64.20251125112827

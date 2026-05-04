@@ -10,11 +10,15 @@
     state: present
   with_items: "{{ hosts_lines }}"
   when: hosts_lines is defined
+
+- name: Set Zimbra OSE {{ zimbra_version }} build name
+  set_fact:
+    zm_pkg: "{{ zm_repo[zimbra_version].builds[ansible_distribution | lower][ansible_distribution_major_version | int] }}"
   
-- name: Download and unpacking Zimbra OSE
+- name: Download and unpacking Zimbra OSE {{ zimbra_version }}
   unarchive:
     validate_certs: no
-    src: '{{ zmurl }}{{ zmpkg }}.tgz'
+    src: '{{ zm_repo[zimbra_version].url }}{{ zm_pkg }}.tgz'
     dest: /usr/local/src/
     copy: no
 
@@ -39,10 +43,10 @@
     group: root
     mode: 0644
 
-- name: Installing Zimbra OSE
+- name: Installing Zimbra OSE {{ zimbra_version }}
   shell: ./install.sh -s < /tmp/zcs/installZimbra-keystrokes
   args:
-    chdir: '/usr/local/src/{{ zmpkg }}/'
+    chdir: '/usr/local/src/{{ zm_pkg }}/'
 
 - name: Configuring Zimbra OSE's services for use
   command: ./zmsetup.pl -c /tmp/zcs/installZimbraScript

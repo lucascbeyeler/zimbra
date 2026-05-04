@@ -10,8 +10,6 @@
 #
 # Installation process
 ################################################################################
-- import_tasks: 'vars/{{zimbra_version}}.yml'
-  when: getent_passwd.rc == 2
 - import_tasks: 'install/dependencies.yml'
   when: getent_passwd.rc == 2
 - import_tasks: 'install/zimbra.yml'
