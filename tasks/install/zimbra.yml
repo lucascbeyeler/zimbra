@@ -29,7 +29,7 @@
 
 - name: Uploading keystroke file
   template:
-    src: 'installZimbra-keystrokes'
+    src: "{{ 'installZimbra-keystrokes' if not zimbra_upgrade else 'installZimbraUpgrade-keystrokes' }}"
     dest: /tmp/zcs/installZimbra-keystrokes
     owner: root
     group: root
@@ -49,6 +49,6 @@
     chdir: '/usr/local/src/{{ zm_pkg }}/'
 
 - name: Configuring Zimbra OSE's services for use
-  command: ./zmsetup.pl -c /tmp/zcs/installZimbraScript
+  command: ./zmsetup.pl {{ '-c /tmp/zcs/installZimbraScript' if not zimbra_upgrade }}
   args:
     chdir: /opt/zimbra/libexec/

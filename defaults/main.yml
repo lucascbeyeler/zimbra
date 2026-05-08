@@ -45,6 +45,8 @@ timezone: UTC
 ################################################################################
 zimbra_version: 8.8.15
 
+zimbra_upgrade: false
+
 zm_repo:
   8.8.15:
     url: https://files.zimbra.com/downloads/8.8.15_GA/

@@ -11,9 +11,9 @@
 # Installation process
 ################################################################################
 - import_tasks: 'install/dependencies.yml'
-  when: getent_passwd.rc == 2
+  when: getent_passwd.rc == 2 or zimbra_upgrade
 - import_tasks: 'install/zimbra.yml'
-  when: getent_passwd.rc == 2
+  when: getent_passwd.rc == 2 or zimbra_upgrade
 - import_tasks: 'install/policyd.yml'
   when: zimbra_policyd == 'y'
 
@@ -21,11 +21,11 @@
 # Configuration process
 ################################################################################
 - import_tasks: 'configure/proxy.yml'
-  when: zimbra_proxy == 'y'
+  when: zimbra_proxy == 'y' and not zimbra_upgrade
 - import_tasks: 'configure/mailbox.yml'
-  when: zimbra_store == 'y'
+  when: zimbra_store == 'y' and not zimbra_upgrade
 - import_tasks: 'configure/mta.yml'
-  when: zimbra_mta == 'y'
+  when: zimbra_mta == 'y' and not zimbra_upgrade
 - import_tasks: 'configure/disable_existing_dns_stub_listener.yml'
   when: zimbra_dnscache == 'y' and disable_existing_dns_stub_listener == 'y'
 
