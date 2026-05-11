@@ -37,7 +37,7 @@
 
 - name: Uploading installer configuration file
   template:
-    src: 'installZimbraScript.j2'
+    src: "{{ 'installZimbraScript.j2' if not zimbra_upgrade else 'installZimbraScriptUpgrade.j2' }}"
     dest: /tmp/zcs/installZimbraScript
     owner: root
     group: root
@@ -49,6 +49,6 @@
     chdir: '/usr/local/src/{{ zm_pkg }}/'
 
 - name: Configuring Zimbra OSE's services for use
-  command: ./zmsetup.pl {{ '-c /tmp/zcs/installZimbraScript' if not zimbra_upgrade }}
+  command: ./zmsetup.pl -c /tmp/zcs/installZimbraScript
   args:
     chdir: /opt/zimbra/libexec/
