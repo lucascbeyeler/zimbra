@@ -39,13 +39,12 @@ zmnetwork: "192.168.200.0/8"
 timezone: UTC
 #hosts_lines:
 #  - "198.162.1.3 {{ hostname }}.{{ domain }} {{ hostname }}" 
+disable_existing_dns_stub_listener: n
 
 #
-# Zimbra repository
+# Zimbra installers
 ################################################################################
 zimbra_version: 8.8.15
-
-zimbra_upgrade: false
 
 zm_repo:
   8.8.15:
@@ -64,4 +63,5 @@ zm_repo:
         6: zcs-8.8.15_GA_3869.RHEL6_64.20190918004220
         7: zcs-8.8.15_GA_3869.RHEL7_64.20190918004220
         8: zcs-8.8.15_GA_3953.RHEL8_64.20200629025823
-disable_existing_dns_stub_listener: n
+
+zimbra_upgrade: false
