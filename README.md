@@ -73,6 +73,8 @@ zm_repo:
 ```
 * **disable_existing_dns_stub_listener:** Inform "y" to disable the systemd-resolved DNS stub listener and free up port 53. Default: **n**
 
+* **zimbra_upgrade:** Inform "y" to upgrade an existing Zimbra installation. Zimbra will be upgraded to **zimbra_version** version. Default: **n**
+
 Service Variables - Inform "y" or "n"
 --------------
 
