@@ -29,7 +29,7 @@
 
 - name: Uploading keystroke file
   template:
-    src: 'installZimbra-keystrokes'
+    src: "{{ 'installZimbra-keystrokes' if not zimbra_upgrade else 'installZimbraUpgrade-keystrokes' }}"
     dest: /tmp/zcs/installZimbra-keystrokes
     owner: root
     group: root
@@ -37,7 +37,7 @@
 
 - name: Uploading installer configuration file
   template:
-    src: 'installZimbraScript.j2'
+    src: "{{ 'installZimbraScript.j2' if not zimbra_upgrade else 'installZimbraScriptUpgrade.j2' }}"
     dest: /tmp/zcs/installZimbraScript
     owner: root
     group: root
