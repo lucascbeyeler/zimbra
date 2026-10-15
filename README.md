@@ -41,6 +41,7 @@ Features
 * HTTP to HTTPS redirect;
 * LMTP Host Lookup in Native mode;
 * Customize your Zimbra OSE server;
+* Optionally install [Zmbackup](https://github.com/lucascbeyeler/zmbackup) to backup and restore mailboxes and accounts;
 
 
 Role Variables
@@ -92,6 +93,28 @@ Service Variables - Inform "y" or "n"
 * **zimbra_drive:**  Enable Zimbra ownCloud Drive - default: **n**
 * **zimbra_imapd:** Enable Zimbra IMAPD Solo Service **BETA**  - default: **n**
 * **zimbra_policyd:**  Enable Zimbra PolicyD Service - default: **n**
+* **zimbra_zmbackup:**  Install [Zmbackup](https://github.com/lucascbeyeler/zmbackup) - default: **n**
+
+Zmbackup Variables - only used when zimbra_zmbackup is "y"
+--------------
+
+Zmbackup is downloaded from Git and installed with its unattended installer (`install-java.sh --unattended`) once Zimbra is installed and running. It installs a Java 17 JDK when one is missing and builds Zmbackup on the server, so the server needs internet access, and the distribution must provide a Java 17 JDK package (openjdk-17-jdk or java-17-openjdk-devel). If Zmbackup is already installed, it is upgraded only when the downloaded source changes (for example, after you change **zmbackup_version**). Its configuration is left as it is.
+
+* **zmbackup_repo:** Git repository Zmbackup is downloaded from - default: **https://github.com/lucascbeyeler/zmbackup.git**
+* **zmbackup_version:** Branch, tag or commit of Zmbackup to install. It must include the unattended installer - default: **2.0**
+* **zmbackup_src_dir:** Where the Zmbackup source is downloaded and built - default: **/usr/local/src/zmbackup**
+* **zmbackup_server_address:** Zimbra server name Zmbackup connects to. It must match the server's TLS certificate - default: **{{ hostname }}.{{ domain }}**
+* **zmbackup_admin_user:** Zimbra admin account Zmbackup uses to export and restore mailboxes - default: **admin@{{ domain }}**
+* **zmbackup_admin_password:** Password of **zmbackup_admin_user** - default: **{{ zmpasswd }}**
+* **zmbackup_backup_dir:** Where the backups are stored - default: **/opt/zimbra/backup**
+* **zmbackup_metadata_dir:** Local directory for Zmbackup's metadata database and lock file. Recommended when **zmbackup_backup_dir** is a network share - default: **""** (same as **zmbackup_backup_dir**)
+* **zmbackup_mail_alert:** Account that receives Zmbackup's alerts - default: **admin@{{ domain }}**
+* **zmbackup_mail_sender:** Account Zmbackup sends its alerts from - default: **root@{{ domain }}**
+* **zmbackup_parallel_process:** Number of accounts backed up at the same time - default: **3**
+* **zmbackup_rotate_days:** Number of days backups are kept - default: **30**
+* **zmbackup_lock_backup:** Allow only one backup session per type per day - default: **true**
+
+When Zimbra uses its self-signed certificate, set `caCertificatePath` in `/etc/zmbackup/zmbackup.yaml` before the first backup (see the Zmbackup README).
 
 Dependencies
 ------------
@@ -113,6 +136,7 @@ Example Playbook
            zmnetwork: 192.168.122.0/24
            zmlogologin: /tmp/login.png
            zmlogoapp: /tmp/app.png
+           zimbra_zmbackup: y
 ```
 
 License
