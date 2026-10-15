@@ -2,7 +2,25 @@
 #
 # Install PolicyD
 ################################################################################
-- name: Installing PolicyD Service
-  command: ./zmprov ms "{{ hostname }}"."{{ domain }}" +zimbraServiceInstalled cbpolicyd +zimbraServiceEnabled cbpolicyd
+- name: Checking if PolicyD is enabled
+  ansible.builtin.command: ./zmprov gs {{ zimbra_server_name }} zimbraServiceInstalled zimbraServiceEnabled
   args:
     chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+  register: zimbra_policyd_services
+  changed_when: false
+  check_mode: false
+
+- name: Installing PolicyD Service
+  ansible.builtin.command: ./zmprov ms {{ zimbra_server_name }} +{{ item }} cbpolicyd
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+  loop:
+    - zimbraServiceInstalled
+    - zimbraServiceEnabled
+  when: "(item ~ ': cbpolicyd') not in zimbra_policyd_services.stdout_lines"
+  changed_when: true
+  notify: Restart Zimbra

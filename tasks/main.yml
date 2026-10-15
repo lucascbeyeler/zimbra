@@ -3,52 +3,69 @@
 # Validations before run the playbook
 ################################################################################
 - name: Checking if there is an Zimbra OSE install already
-  command: getent passwd zimbra
+  ansible.builtin.command: getent passwd zimbra
   register: getent_passwd
-  ignore_errors: true
+  changed_when: false
+  failed_when: getent_passwd.rc not in [0, 2]
+  check_mode: false
+
+- name: Deciding if Zimbra OSE needs to be installed or upgraded
+  ansible.builtin.set_fact:
+    zimbra_run_installer: "{{ getent_passwd.rc == 2 or zimbra_upgrade | zimbra_bool }}"
+
+#
+# Freeing port 53 for zimbra-dnscache before it is installed
+################################################################################
+- name: Disabling the systemd-resolved DNS stub listener
+  ansible.builtin.include_tasks: configure/disable_existing_dns_stub_listener.yml
+  when: zimbra_dnscache | zimbra_bool and disable_existing_dns_stub_listener | zimbra_bool
 
 #
 # Installation process
 ################################################################################
-- import_tasks: 'install/dependencies.yml'
-  when: getent_passwd.rc == 2 or zimbra_upgrade
-- import_tasks: 'install/zimbra.yml'
-  when: getent_passwd.rc == 2 or zimbra_upgrade
-- import_tasks: 'install/policyd.yml'
-  when: zimbra_policyd == 'y'
+- name: Installing the dependencies
+  ansible.builtin.include_tasks: install/dependencies.yml
+  when: zimbra_run_installer | bool
+
+- name: Installing Zimbra OSE
+  ansible.builtin.include_tasks: install/zimbra.yml
+  when: zimbra_run_installer | bool
+
+- name: Installing PolicyD
+  ansible.builtin.include_tasks: install/policyd.yml
+  when: zimbra_policyd | zimbra_bool
 
 #
 # Configuration process
 ################################################################################
-- import_tasks: 'configure/proxy.yml'
-  when: zimbra_proxy == 'y' and not zimbra_upgrade
-- import_tasks: 'configure/mailbox.yml'
-  when: zimbra_store == 'y' and not zimbra_upgrade
-- import_tasks: 'configure/mta.yml'
-  when: zimbra_mta == 'y' and not zimbra_upgrade
-- import_tasks: 'configure/disable_existing_dns_stub_listener.yml'
-  when: zimbra_dnscache == 'y' and disable_existing_dns_stub_listener == 'y'
+- name: Configuring the proxy
+  ansible.builtin.include_tasks: configure/proxy.yml
+  when: zimbra_proxy | zimbra_bool and not zimbra_upgrade | zimbra_bool
+
+- name: Configuring the mailbox
+  ansible.builtin.include_tasks: configure/mailbox.yml
+  when: zimbra_store | zimbra_bool and not zimbra_upgrade | zimbra_bool
+
+- name: Configuring the MTA
+  ansible.builtin.include_tasks: configure/mta.yml
+  when: zimbra_mta | zimbra_bool and not zimbra_upgrade | zimbra_bool
 
 #
 # Extras configuration process
 ################################################################################
-- import_tasks: 'extras/modify-logo.yml'
+- name: Changing the logo
+  ansible.builtin.include_tasks: extras/modify-logo.yml
   when: zmlogologin is defined and zmlogoapp is defined
 
 #
-# Restarting Zimbra
+# Restarting Zimbra when something changed
 ################################################################################
-- name: 'Reloading Zimbra OSE Services'
-  shell: source /opt/zimbra/.bashrc && ./zmcontrol restart
-  args:
-    executable: /bin/bash
-    chdir: '/opt/zimbra/bin/'
-  become: yes
-  become_user: zimbra
-  retries: 3
+- name: Applying the changes to Zimbra OSE
+  ansible.builtin.meta: flush_handlers
 
 #
 # Zmbackup - backup and restore tool for Zimbra OSE
 ################################################################################
-- import_tasks: 'install/zmbackup.yml'
-  when: zimbra_zmbackup == 'y'
+- name: Installing Zmbackup
+  ansible.builtin.include_tasks: install/zmbackup.yml
+  when: zimbra_zmbackup | zimbra_bool

@@ -2,53 +2,70 @@
 #
 # Download and install Zimbra OSE
 ################################################################################
+- name: Checking there is a build for this distribution of Zimbra OSE {{ zimbra_version }}
+  ansible.builtin.assert:
+    that:
+      - zimbra_build | length > 0
+    fail_msg: >-
+      zm_repo has no Zimbra OSE {{ zimbra_version }} build for
+      {{ ansible_distribution }} {{ ansible_distribution_major_version }}
+    quiet: true
 
 - name: Update /etc/hosts
-  lineinfile:
-    path: /etc/hosts 
-    line: "{{ item }}" 
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    line: "{{ item }}"
     state: present
-  with_items: "{{ hosts_lines }}"
+  loop: "{{ hosts_lines }}"
   when: hosts_lines is defined
 
-- name: Set Zimbra OSE {{ zimbra_version }} build name
-  set_fact:
-    zm_pkg: "{{ zm_repo[zimbra_version].builds[ansible_distribution | lower][ansible_distribution_major_version | int] }}"
-  
 - name: Download and unpacking Zimbra OSE {{ zimbra_version }}
-  unarchive:
-    validate_certs: no
-    src: '{{ zm_repo[zimbra_version].url }}{{ zm_pkg }}.tgz'
+  ansible.builtin.unarchive:
+    src: "{{ zm_repo[zimbra_version | string].url }}{{ zimbra_build }}.tgz"
     dest: /usr/local/src/
-    copy: no
+    remote_src: true
+    validate_certs: "{{ zimbra_download_validate_certs }}"
+    creates: /usr/local/src/{{ zimbra_build }}/install.sh
 
+# The installer files have every password, so only root can read them
 - name: Create the folder to upload the scripts
-  file:
+  ansible.builtin.file:
     path: /tmp/zcs
     state: directory
+    owner: root
+    group: root
+    mode: "0700"
 
 - name: Uploading keystroke file
-  template:
-    src: "{{ 'installZimbra-keystrokes' if not zimbra_upgrade else 'installZimbraUpgrade-keystrokes' }}"
+  ansible.builtin.template:
+    src: "{{ 'installZimbraUpgrade-keystrokes' if zimbra_upgrade | zimbra_bool else 'installZimbra-keystrokes' }}"
     dest: /tmp/zcs/installZimbra-keystrokes
     owner: root
     group: root
-    mode: 0644
+    mode: "0600"
 
 - name: Uploading installer configuration file
-  template:
-    src: "{{ 'installZimbraScript.j2' if not zimbra_upgrade else 'installZimbraScriptUpgrade.j2' }}"
+  ansible.builtin.template:
+    src: "{{ 'installZimbraScriptUpgrade.j2' if zimbra_upgrade | zimbra_bool else 'installZimbraScript.j2' }}"
     dest: /tmp/zcs/installZimbraScript
     owner: root
     group: root
-    mode: 0644
+    mode: "0600"
 
 - name: Installing Zimbra OSE {{ zimbra_version }}
-  shell: ./install.sh -s < /tmp/zcs/installZimbra-keystrokes
+  ansible.builtin.shell: ./install.sh -s < /tmp/zcs/installZimbra-keystrokes
   args:
-    chdir: '/usr/local/src/{{ zm_pkg }}/'
+    chdir: /usr/local/src/{{ zimbra_build }}/
+  changed_when: true
 
 - name: Configuring Zimbra OSE's services for use
-  command: ./zmsetup.pl -c /tmp/zcs/installZimbraScript
+  ansible.builtin.command: ./zmsetup.pl -c /tmp/zcs/installZimbraScript
   args:
     chdir: /opt/zimbra/libexec/
+  changed_when: true
+  notify: Restart Zimbra
+
+- name: Removing the installer files
+  ansible.builtin.file:
+    path: /tmp/zcs
+    state: absent

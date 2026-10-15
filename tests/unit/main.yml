@@ -1,0 +1,269 @@
+---
+# Unit tests for the role's variables and templates. They render the role's
+# files with mocked facts, so they need no target host, root or containers:
+#
+#   ansible-playbook tests/unit/main.yml
+#
+- name: Unit tests for the zimbra role
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  # vars_files rank below task vars, so each test can override them
+  vars_files:
+    - ../../defaults/main.yml
+    - ../../vars/main.yml
+  vars:
+    templates: "{{ playbook_dir }}/../../templates"
+    ansible_distribution: Ubuntu
+    ansible_distribution_major_version: "20"
+  tasks:
+    #
+    # The zimbra_bool filter for the y/n variables
+    ############################################################################
+    - name: Convert y/n, yes/no and booleans
+      ansible.builtin.assert:
+        that:
+          - item.value | zimbra_bool == item.expected
+        quiet: true
+      loop:
+        - {value: y, expected: true}
+        - {value: Y, expected: true}
+        - {value: "yes", expected: true}
+        - {value: true, expected: true}
+        - {value: "true", expected: true}
+        - {value: 1, expected: true}
+        - {value: n, expected: false}
+        - {value: "no", expected: false}
+        - {value: false, expected: false}
+        - {value: "False", expected: false}
+        - {value: 0, expected: false}
+
+    - name: Reject a value that is not y/n
+      block:
+        - name: Convert an invalid value
+          ansible.builtin.set_fact:
+            zimbra_bool_result: "{{ 'maybe' | zimbra_bool }}"
+      rescue:
+        - name: Check the error
+          ansible.builtin.assert:
+            that:
+              - ansible_failed_result.msg is search("'maybe' is not y, n or a boolean")
+
+    - name: Check the invalid value was rejected
+      ansible.builtin.assert:
+        that:
+          - zimbra_bool_result is not defined
+
+    #
+    # Installer build
+    ############################################################################
+    - name: Find the installer build of each distribution
+      ansible.builtin.assert:
+        that:
+          - zimbra_build == item.build
+        quiet: true
+      vars:
+        ansible_distribution: "{{ item.distribution }}"
+        ansible_distribution_major_version: "{{ item.version }}"
+      loop:
+        - {distribution: Ubuntu, version: "20", build: zcs-8.8.15_GA_4179.UBUNTU20_64.20211118033954}
+        - {distribution: Ubuntu, version: "18", build: zcs-8.8.15_GA_3869.UBUNTU18_64.20190918004220}
+        - {distribution: RedHat, version: "8", build: zcs-8.8.15_GA_3953.RHEL8_64.20200629025823}
+        - {distribution: CentOS, version: "7", build: zcs-8.8.15_GA_3869.RHEL7_64.20190918004220}
+        # No build: the install stops with a clear message
+        - {distribution: Ubuntu, version: "24", build: ""}
+        - {distribution: Rocky, version: "9", build: ""}
+      loop_control:
+        label: "{{ item.distribution }} {{ item.version }}"
+
+    - name: Find no build for a version missing from zm_repo
+      ansible.builtin.assert:
+        that:
+          - zimbra_build == ''
+      vars:
+        zimbra_version: 10.1.15
+
+    - name: Find the build of a version added to zm_repo
+      ansible.builtin.assert:
+        that:
+          - zimbra_build == 'zcs-10.1.15_GA_0425.UBUNTU22_64'
+      vars:
+        zimbra_version: 10.1.15
+        ansible_distribution_major_version: "22"
+        zm_repo:
+          10.1.15:
+            url: https://example.com/
+            builds:
+              ubuntu:
+                22: zcs-10.1.15_GA_0425.UBUNTU22_64
+
+    #
+    # Installer answers (keystrokes)
+    ############################################################################
+    - name: Render the keystrokes with the defaults
+      ansible.builtin.set_fact:
+        keystrokes: "{{ lookup('ansible.builtin.template', templates ~ '/installZimbra-keystrokes').splitlines() }}"
+
+    - name: Check the keystrokes with the defaults
+      ansible.builtin.assert:
+        that:
+          - keystrokes == expected
+        fail_msg: "{{ keystrokes }}"
+      vars:
+        expected: [
+          y, y,
+          y, y, y, n, n, y, y, y, y, y,  # ldap ... proxy
+          n, n, n,                        # chat, drive, imapd (8.8.15 only)
+          y
+        ]
+
+    - name: Render the keystrokes for Zimbra 10 with booleans and yes/no
+      ansible.builtin.set_fact:
+        keystrokes: "{{ lookup('ansible.builtin.template', templates ~ '/installZimbra-keystrokes').splitlines() }}"
+      vars:
+        zimbra_version: 10.1.15
+        zimbra_ldap: false
+        zimbra_dnscache: true
+        zimbra_snmp: "yes"
+        zimbra_proxy: "no"
+        zimbra_chat: y
+
+    - name: Check the keystrokes for Zimbra 10 with booleans and yes/no
+      ansible.builtin.assert:
+        that:
+          - keystrokes == expected
+        fail_msg: "{{ keystrokes }}"
+      vars:
+        expected: [y, y, n, y, y, y, y, y, y, y, y, n, y]
+
+    #
+    # Installer configuration
+    ############################################################################
+    - name: Render the installer configuration with the defaults
+      ansible.builtin.set_fact:
+        install_script: "{{ lookup('ansible.builtin.template', templates ~ '/installZimbraScript.j2') }}"
+      vars:
+        hostname: mail
+        domain: example.com
+        zmpasswd: S3cret
+        zmnetwork: 10.0.0.0/8
+        timezone: America/Sao_Paulo
+
+    - name: Check the installer configuration with the defaults
+      ansible.builtin.assert:
+        that:
+          # Nothing left unrendered
+          - install_script is not search('[{][{]|[{][%]')
+          - install_script is search('^HOSTNAME="mail.example.com"$', multiline=true)
+          - install_script is search('^CREATEADMIN="admin@example.com"$', multiline=true)
+          - install_script is search('^CREATEADMINPASS="S3cret"$', multiline=true)
+          - install_script is search('^LDAPROOTPASS="S3cret"$', multiline=true)
+          - install_script is search('^zimbraMtaMyNetworks="127.0.0.0/8 \[::1\]/128 10.0.0.0/8"$', multiline=true)
+          - install_script is search('^zimbraPrefTimeZoneId="America/Sao_Paulo"$', multiline=true)
+          # Only the packages selected in the keystrokes
+          - install_script is search(expected_packages, multiline=true)
+        fail_msg: "{{ install_script | regex_search('^INSTALL_PACKAGES=.*$', multiline=true) }}"
+      vars:
+        expected_packages: >-
+          ^INSTALL_PACKAGES="zimbra-core zimbra-ldap zimbra-logger zimbra-mta zimbra-store
+          zimbra-apache zimbra-spell zimbra-memcached zimbra-proxy"$
+
+    - name: Render the installer configuration with other packages
+      ansible.builtin.set_fact:
+        install_script: "{{ lookup('ansible.builtin.template', templates ~ '/installZimbraScript.j2') }}"
+      vars:
+        zimbra_logger: n
+        zimbra_dnscache: true
+        zimbra_spell: "no"
+        zimbra_chat: y
+        zimbra_drive: y
+
+    - name: Check the installer configuration with other packages
+      ansible.builtin.assert:
+        that:
+          - install_script is search(expected_packages, multiline=true)
+        fail_msg: "{{ install_script | regex_search('^INSTALL_PACKAGES=.*$', multiline=true) }}"
+      vars:
+        expected_packages: >-
+          ^INSTALL_PACKAGES="zimbra-core zimbra-ldap zimbra-mta zimbra-dnscache zimbra-store
+          zimbra-apache zimbra-memcached zimbra-proxy zimbra-chat zimbra-drive"$
+
+    - name: Leave out Chat and Drive on Zimbra 10, its installer does not have them
+      ansible.builtin.assert:
+        that:
+          - lookup('ansible.builtin.template', templates ~ '/installZimbraScript.j2') is search(expected_packages, multiline=true)
+      vars:
+        zimbra_version: 10.1.15
+        zimbra_chat: y
+        zimbra_drive: y
+        expected_packages: >-
+          ^INSTALL_PACKAGES="zimbra-core zimbra-ldap zimbra-logger zimbra-mta zimbra-store
+          zimbra-apache zimbra-spell zimbra-memcached zimbra-proxy"$
+
+    #
+    # Defaults
+    ############################################################################
+    - name: Check the default network has no host bits set (Postfix rejects it)
+      ansible.builtin.assert:
+        that:
+          - (address | int) % (2 ** (32 - (prefix | int))) == 0
+        fail_msg: "{{ zmnetwork }} is not a network address"
+      vars:
+        octets: "{{ zmnetwork.split('/')[0].split('.') | map('int') | list }}"
+        address: "{{ octets[0] * 16777216 + octets[1] * 65536 + octets[2] * 256 + octets[3] }}"
+        prefix: "{{ zmnetwork.split('/')[1] }}"
+
+    - name: Check the RBLs
+      ansible.builtin.assert:
+        that:
+          - zimbra_rbls | intersect(zimbra_rbls_absent) == []
+          - "'dnsbl.sorbs.net' in zimbra_rbls_absent"
+          - "'dsn.rfc-ignorant.org' in zimbra_rbls_absent"
+
+    - name: Check the defaults turn optional features off
+      ansible.builtin.assert:
+        that:
+          - not zimbra_upgrade | bool
+          - not zimbra_policyd | bool
+          - not zimbra_zmbackup | bool
+          - not disable_existing_dns_stub_listener | bool
+          - zimbra_download_validate_certs | bool
+
+    #
+    # Zmbackup
+    ############################################################################
+    - name: Check the Zmbackup installer environment
+      ansible.builtin.assert:
+        that:
+          - zmbackup_environment.OSE_INSTALL_DOMAIN == 'example.com'
+          - zmbackup_environment.OSE_INSTALL_ADDRESS == 'mail.example.com'
+          - zmbackup_environment.ZMBKP_REST_ADMIN == 'admin@example.com'
+          - zmbackup_environment.ZMBKP_REST_ADMIN_PASS == 'S3cret'
+          - zmbackup_environment.ZMBKP_MAIL_SENDER == 'root@example.com'
+          - zmbackup_environment.ZMBKP_METADATA_DIR == ''
+          - zmbackup_environment.MAX_PARALLEL_PROCESS | string == '3'
+          - zmbackup_environment.ROTATE_TIME | string == '30'
+          - zmbackup_environment.LOCK_BACKUP == 'true'
+      vars:
+        hostname: mail
+        domain: example.com
+        zmpasswd: S3cret
+
+    - name: Check Zmbackup gets the lock setting as false
+      ansible.builtin.assert:
+        that:
+          - zmbackup_environment.LOCK_BACKUP == 'false'
+      vars:
+        zmbackup_lock_backup: "no"
+
+    #
+    # Domain settings
+    ############################################################################
+    - name: Check the logo settings point to the server
+      ansible.builtin.assert:
+        that:
+          - zimbra_logo_settings[0].name == 'zimbraSkinLogoURL'
+          - zimbra_logo_settings[0].value == 'https://mail.example.com'
+      vars:
+        hostname: mail
+        domain: example.com

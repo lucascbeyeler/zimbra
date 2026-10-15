@@ -1,0 +1,8 @@
+#!/bin/bash
+# A fake of pyzor discover, for the Molecule tests
+set -eu
+[ "$(id -un)" = "zimbra" ] || { echo "pyzor must be run as zimbra" >&2; exit 1; }
+echo "{\"command\": \"pyzor\", \"args\": \"$*\", \"user\": \"$(id -un)\"}" >> /opt/zimbra/log/fake-calls.log
+[ "$1" = "--homedir" ] && [ "$3" = "discover" ]
+mkdir -p "$2"
+echo "public.pyzor.org:24441" > "$2/servers"

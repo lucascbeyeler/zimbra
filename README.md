@@ -3,16 +3,20 @@ Zimbra
 
 Non-Official ansible role to install and configure Zimbra Collaboration Open Source Edition on Red Hat, CentOS and Ubuntu Server.
 
-[![Build Status](https://travis-ci.org/lucascbeyeler/zimbra.svg?branch=master)](https://travis-ci.org/lucascbeyeler/zimbra)
+[![CI](https://github.com/lucascbeyeler/zimbra/actions/workflows/ci.yml/badge.svg)](https://github.com/lucascbeyeler/zimbra/actions/workflows/ci.yml)
 [![Zimbra Version](https://img.shields.io/badge/Zimbra-8.8.15-blue.svg)](https://www.zimbra.com/downloads/zimbra-collaboration-open-source/)
 ![Linux Distro](https://img.shields.io/badge/platform-CentOS%20%7C%20Red%20Hat%20%7C%20Ubuntu-blue.svg)
 ![Branch](https://img.shields.io/badge/Branch-Master-green.svg)
-[![Ansible Version](https://img.shields.io/badge/Ansible-2.9.6-green.svg)](https://www.ansible.com/)
+[![Ansible Version](https://img.shields.io/badge/Ansible-2.15-green.svg)](https://www.ansible.com/)
 
 Requirements
 ------------
 
-* [Ansible](https://github.com/ansible/ansible) 2.9.6 or high.
+* [Ansible](https://github.com/ansible/ansible) 2.15 or higher.
+* The `community.general` collection:
+  ```
+  ansible-galaxy collection install -r requirements.yml
+  ```
 
 Install
 --------------
@@ -33,7 +37,7 @@ ansible-galaxy install -f lucascbeyeler.zimbra
 Features
 --------------
 
-* Run many times you want to apply the configuration - installatin only occur if the server has no Zimbra installed
+* Run many times you want to apply the configuration - installation only occur if the server has no Zimbra installed, and Zimbra is restarted only when something changed;
 * Configuring SpamAssassin, Pyzor and Razor;
 * Configure a logo for your server - **WARNING**: [Read this article for more details about the logo](https://blog.zimbra.com/2015/09/change-login-app-logo-open-source-network-edition/);
 * Enable PolicyD service and web admin;
@@ -50,11 +54,15 @@ Role Variables
 * **hostname:** set the hostname of your server **WITHOUT** the domain;
 * **domain:** set the domain for the server and the primary domain for your Zimbra server;
 * **zmpasswd:** set the password used for every single service in your Zimbra server, like the admin account and the LDAPServer - **WARNING:** do not put special characters in the password during the install;
-* **zmnetwork:** set the network the Zimbra server is;
+* **zmnetwork:** set the network the Zimbra server is, in CIDR notation (like 192.168.122.0/24);
 * **zmlogologin:** Inform the path for your logo (Login Screen) - don't inform and no image will be applied;
 * **zmlogoapp:** Inform the path for your logo (Application Screen) - don't inform and no image will be applied;
 * **timezone:** inform the timezone the playbook should set in your server;
 * **zimbra_version:** Inform which version of Zimbra you want to install. Default: 8.8.15
+* **zimbra_download_validate_certs:** Validate the TLS certificate of the server Zimbra is downloaded from. Default: **true**
+* **zimbra_rbls:** DNS blocklists the MTA checks before accepting a message. Default: **zen.spamhaus.org** and **bl.spamcop.net**
+* **zimbra_rbls_absent:** DNS blocklists removed from the MTA. Default: **dsn.rfc-ignorant.org** and **dnsbl.sorbs.net**, which were shut down and were added by older versions of this role
+* **zimbra_kam_url:** Where Kevin McGrail's SpamAssassin rules (KAM.cf) are downloaded from
 * **zm_repo:** Variable to inform which repository of Zimbra builds you want to download from. You need to set **url**, and a dictonary of **builds** according to distribution and distribution version.
 Example:
 ```
@@ -78,6 +86,8 @@ zm_repo:
 
 Service Variables - Inform "y" or "n"
 --------------
+
+The "y"/"n" variables also accept "yes"/"no" and booleans (true/false).
 
 * **zimbra_ldap:** Enable Zimbra LDAP Server - default: **y**
 * **zimbra_logger:** Enable Zimbra Logger Service - default: **y**
@@ -115,6 +125,22 @@ Zmbackup is downloaded from Git and installed with its unattended installer (`in
 * **zmbackup_lock_backup:** Allow only one backup session per type per day - default: **true**
 
 When Zimbra uses its self-signed certificate, set `caCertificatePath` in `/etc/zmbackup/zmbackup.yaml` before the first backup (see the Zmbackup README).
+
+Testing
+------------
+
+The role has two kinds of tests:
+
+* **Unit tests** (`tests/unit/main.yml`) render the role's variables and templates (installer answers, installer configuration, Zmbackup settings) with mocked facts. They need neither a server nor Docker:
+  ```
+  ansible-playbook tests/unit/main.yml
+  ```
+* **Molecule** (`molecule/default`) runs the role from start to end, twice, in an Ubuntu container. Zimbra itself cannot run in a container, so the scenario installs a fake of it (`molecule/default/files/zcs-fake`) that records what the role asked of Zimbra, and checks it in `verify.yml`. It needs Docker:
+  ```
+  pip install -r requirements.txt
+  ansible-galaxy collection install -r requirements.yml community.docker
+  molecule test
+  ```
 
 Dependencies
 ------------

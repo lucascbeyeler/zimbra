@@ -1,3 +1,4 @@
+---
 # Change the default logo inside the webmail and on the login screen
 # This playbook is not required to run for a 100% install. To skip, just don't
 # inform the vars zmlogologin and zmlogoapp.
@@ -5,38 +6,39 @@
 #           webmail and the logo for the login screen.
 
 - name: Send the logo file (LOGIN) from your PC to the Server
-  copy:
-    src: '{{ zmlogologin }}'
+  ansible.builtin.copy:
+    src: "{{ zmlogologin }}"
     dest: /opt/zimbra/jetty/webapps/zimbra/img/logoLoginBanner.png
     owner: zimbra
     group: zimbra
-    mode: 0644
+    mode: "0644"
 
 - name: Send the logo file (WEBMAIL) from your PC to the Server
-  copy:
-    src: '{{ zmlogoapp }}'
+  ansible.builtin.copy:
+    src: "{{ zmlogoapp }}"
     dest: /opt/zimbra/jetty/webapps/zimbra/img/logoAppBanner.png
     owner: zimbra
     group: zimbra
-    mode: 0644
+    mode: "0644"
+
+- name: Reading the logos of the domain
+  ansible.builtin.command: ./zmprov gd {{ domain }} {{ zimbra_logo_settings | map(attribute='name') | join(' ') }}
+  args:
+    chdir: /opt/zimbra/bin
+  become: true
+  become_user: zimbra
+  register: zimbra_logo_config
+  changed_when: false
+  check_mode: false
 
 - name: Configure the Zimbra Server to find the new logos
-  command: './zmprov md {{ domain }} zimbraSkinLogoURL https://{{ hostname }}.{{ domain }}'
+  ansible.builtin.command: ./zmprov md {{ domain }} {{ item.name }} {{ item.value }}
   args:
     chdir: /opt/zimbra/bin
   become: true
   become_user: zimbra
-
-- name: Configure the path for the login logo file
-  command: './zmprov md {{ domain }} zimbraSkinLogoLoginBanner /img/logoLoginBanner.png'
-  args:
-    chdir: /opt/zimbra/bin
-  become: true
-  become_user: zimbra
-
-- name: Configure the path for the webmail logo file
-  command: './zmprov md {{ domain }} zimbraSkinLogoAppBanner /img/logoAppBanner.png'
-  args:
-    chdir: /opt/zimbra/bin
-  become: true
-  become_user: zimbra
+  loop: "{{ zimbra_logo_settings }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: "(item.name ~ ': ' ~ item.value) not in zimbra_logo_config.stdout_lines"
+  changed_when: true

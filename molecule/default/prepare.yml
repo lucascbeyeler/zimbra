@@ -1,0 +1,98 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  tasks:
+    # acl lets Ansible become the zimbra user
+    - name: Install Python 3, sudo, acl and git
+      ansible.builtin.raw: apt-get update && apt-get install -y python3 sudo acl git
+      changed_when: true
+
+    - name: Create the folders for the fakes
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - /srv/www
+        - /srv/build/zcs-fake.UBUNTU22_64
+        - /srv/git/zmbackup
+        - /etc/fake-zimbra
+
+    #
+    # Zimbra installer and KAM rules, served over HTTP
+    ############################################################################
+    - name: Copy the fake Zimbra installer
+      ansible.builtin.copy:
+        src: zcs-fake/
+        dest: /srv/build/zcs-fake.UBUNTU22_64/
+        mode: "0755"
+
+    # Packed like the real installer, with the build folder at the root
+    - name: Pack the fake Zimbra installer
+      ansible.builtin.command: tar -C /srv/build -czf /srv/www/zcs-fake.UBUNTU22_64.tgz zcs-fake.UBUNTU22_64  # noqa command-instead-of-module
+      changed_when: true
+
+    - name: Create fake KAM rules
+      ansible.builtin.copy:
+        content: "# KAM rules for the Molecule tests\n"
+        dest: /srv/www/KAM.cf
+        mode: "0644"
+
+    - name: Serve the installer and the rules
+      ansible.builtin.shell: >-
+        setsid nohup python3 -m http.server 8000 --bind 127.0.0.1 --directory /srv/www
+        > /var/log/fake-http.log 2>&1 < /dev/null &
+      changed_when: true
+
+    - name: Wait for the web server
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: 8000
+        timeout: 30
+
+    #
+    # Pyzor and Razor need the internet, so fakes come first in PATH
+    ############################################################################
+    - name: Install the fake pyzor and razor-admin
+      ansible.builtin.copy:
+        src: "bin/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        mode: "0755"
+      loop:
+        - pyzor
+        - razor-admin
+
+    #
+    # Zmbackup repository, with the 2.0 branch the role installs by default
+    ############################################################################
+    - name: Copy the fake Zmbackup installer
+      ansible.builtin.copy:
+        src: zmbackup/install-java.sh
+        dest: /srv/git/zmbackup/install-java.sh
+        mode: "0755"
+
+    - name: Create the Zmbackup repository
+      ansible.builtin.shell: |
+        set -e
+        cd /srv/git/zmbackup
+        git init -q
+        git add install-java.sh
+        git -c user.name=Molecule -c user.email=molecule@example.com commit -q -m "Fake Zmbackup"
+        git branch 2.0
+      args:
+        creates: /srv/git/zmbackup/.git
+
+    #
+    # An earlier version of the role added RBLs that were shut down since
+    ############################################################################
+    - name: Seed the fake Zimbra with the old RBLs
+      ansible.builtin.copy:
+        content: |
+          {"server": {"zimbraMtaRestriction": [
+            "reject_rbl_client zen.spamhaus.org",
+            "reject_rbl_client dnsbl.sorbs.net",
+            "reject_rbl_client dsn.rfc-ignorant.org"
+          ]}}
+        dest: /etc/fake-zimbra/seed.json
+        mode: "0644"

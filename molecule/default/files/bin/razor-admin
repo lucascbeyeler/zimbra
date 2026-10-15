@@ -1,0 +1,14 @@
+#!/bin/bash
+# A fake of razor-admin, for the Molecule tests
+set -eu
+[ "$(id -un)" = "zimbra" ] || { echo "razor-admin must be run as zimbra" >&2; exit 1; }
+echo "{\"command\": \"razor-admin\", \"args\": \"$*\", \"user\": \"$(id -un)\"}" >> /opt/zimbra/log/fake-calls.log
+home=${1#-home=}
+case "$2" in
+  -create) mkdir -p "$home" && touch "$home/razor-agent.conf" ;;
+  -discover) touch "$home/servers.discovery.lst" ;;
+  -register)
+    [ -e "$home/identity" ] && { echo "already registered" >&2; exit 1; }
+    touch "$home/identity-fake" && ln -s identity-fake "$home/identity" ;;
+  *) exit 1 ;;
+esac

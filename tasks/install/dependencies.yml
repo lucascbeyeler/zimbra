@@ -3,18 +3,20 @@
 # Installing dependencies and removing other smtp servers
 ################################################################################
 - name: Ensure Sendmail and Postfix is not installed
-  package:
+  ansible.builtin.package:
     name: "{{ absent }}"
     state: absent
 
 - name: Ensure Pyzor and Razor is installed (CentOS/RedHat)
-  yum:
+  ansible.builtin.dnf:
     name: "{{ centos }}"
     state: present
   when: ansible_os_family == "RedHat"
 
 - name: Ensure Pyzor and Razor is installed (Ubuntu)
-  apt:
+  ansible.builtin.apt:
     name: "{{ ubuntu }}"
     state: present
+    update_cache: true
+    cache_valid_time: 3600
   when: ansible_os_family == "Debian"

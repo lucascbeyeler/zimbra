@@ -1,5 +1,6 @@
 ---
-- hosts: localhost
+- name: Test the zimbra role
+  hosts: localhost
   remote_user: root
   roles:
 

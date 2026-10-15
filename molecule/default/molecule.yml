@@ -1,0 +1,40 @@
+---
+# Zimbra cannot be installed in a container, so the scenario installs a fake
+# of it (files/zcs-fake) from a web server in the container. The fake runs the
+# role from start to end and records what the role asked of Zimbra.
+driver:
+  name: docker
+platforms:
+  - name: ubuntu_jammy
+    image: ubuntu:jammy
+    pre_build_image: true
+provisioner:
+  name: ansible
+  options:
+    become: true
+  inventory:
+    group_vars:
+      all:
+        hostname: mail
+        domain: example.com
+        zmpasswd: S3cretPass
+        zmnetwork: 10.10.0.0/16
+        timezone: America/Sao_Paulo
+        # Booleans work as well as y/n
+        zimbra_spell: false
+        zimbra_policyd: y
+        zimbra_zmbackup: true
+        zm_repo:
+          8.8.15:
+            url: http://127.0.0.1:8000/
+            builds:
+              ubuntu:
+                22: zcs-fake.UBUNTU22_64
+        zimbra_kam_url: http://127.0.0.1:8000/KAM.cf
+        zmbackup_repo: /srv/git/zmbackup
+        zmlogologin: "${MOLECULE_SCENARIO_DIRECTORY}/files/logo.png"
+        zmlogoapp: "${MOLECULE_SCENARIO_DIRECTORY}/files/logo.png"
+  playbooks:
+    prepare: prepare.yml
+    converge: converge.yml
+    verify: verify.yml
