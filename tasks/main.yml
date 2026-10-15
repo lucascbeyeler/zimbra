@@ -46,3 +46,9 @@
   become: yes
   become_user: zimbra
   retries: 3
+
+#
+# Zmbackup - backup and restore tool for Zimbra OSE
+################################################################################
+- import_tasks: 'install/zmbackup.yml'
+  when: zimbra_zmbackup == 'y'

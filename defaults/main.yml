@@ -27,6 +27,7 @@ zimbra_chat: n
 zimbra_drive: n
 zimbra_imapd: n
 zimbra_policyd: n
+zimbra_zmbackup: n
 
 #
 # Zimbra configuration
@@ -65,3 +66,33 @@ zm_repo:
         8: zcs-8.8.15_GA_3953.RHEL8_64.20200629025823
 
 zimbra_upgrade: false
+
+#
+# Zmbackup - only used when zimbra_zmbackup is "y"
+################################################################################
+zmbackup_repo: https://github.com/lucascbeyeler/zmbackup.git
+zmbackup_version: "2.0"
+zmbackup_src_dir: /usr/local/src/zmbackup
+zmbackup_server_address: "{{ hostname }}.{{ domain }}"
+zmbackup_admin_user: "admin@{{ domain }}"
+zmbackup_admin_password: "{{ zmpasswd }}"
+zmbackup_backup_dir: /opt/zimbra/backup
+zmbackup_metadata_dir: ""
+zmbackup_mail_alert: "admin@{{ domain }}"
+zmbackup_mail_sender: "root@{{ domain }}"
+zmbackup_parallel_process: 3
+zmbackup_rotate_days: 30
+zmbackup_lock_backup: true
+
+zmbackup_environment:
+  OSE_INSTALL_DOMAIN: "{{ domain }}"
+  OSE_INSTALL_ADDRESS: "{{ zmbackup_server_address }}"
+  OSE_DEFAULT_BKP_DIR: "{{ zmbackup_backup_dir }}"
+  ZMBKP_METADATA_DIR: "{{ zmbackup_metadata_dir }}"
+  ZMBKP_REST_ADMIN: "{{ zmbackup_admin_user }}"
+  ZMBKP_REST_ADMIN_PASS: "{{ zmbackup_admin_password }}"
+  ZMBKP_MAIL_ALERT: "{{ zmbackup_mail_alert }}"
+  ZMBKP_MAIL_SENDER: "{{ zmbackup_mail_sender }}"
+  MAX_PARALLEL_PROCESS: "{{ zmbackup_parallel_process }}"
+  ROTATE_TIME: "{{ zmbackup_rotate_days }}"
+  LOCK_BACKUP: "{{ zmbackup_lock_backup | bool | lower }}"

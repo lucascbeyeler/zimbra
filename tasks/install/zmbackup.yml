@@ -1,0 +1,35 @@
+---
+#
+# Install Zmbackup
+################################################################################
+- name: Ensure Git is installed to download Zmbackup
+  package:
+    name: git
+    state: present
+
+- name: Downloading Zmbackup
+  git:
+    repo: "{{ zmbackup_repo }}"
+    dest: "{{ zmbackup_src_dir }}"
+    version: "{{ zmbackup_version }}"
+    force: yes
+  register: zmbackup_source
+
+- name: Checking if there is a Zmbackup install already
+  stat:
+    path: /usr/local/lib/zmbackup/zmbackup.jar
+  register: zmbackup_jar
+
+- name: Installing Zmbackup
+  command: ./install-java.sh --unattended
+  args:
+    chdir: "{{ zmbackup_src_dir }}"
+  environment: "{{ zmbackup_environment }}"
+  when: not zmbackup_jar.stat.exists
+
+- name: Upgrading Zmbackup
+  command: ./install-java.sh --unattended --force-upgrade
+  args:
+    chdir: "{{ zmbackup_src_dir }}"
+  environment: "{{ zmbackup_environment }}"
+  when: zmbackup_jar.stat.exists and zmbackup_source.changed
