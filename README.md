@@ -138,7 +138,8 @@ The role has two kinds of tests:
 * **Molecule** (`molecule/default`) runs the role from start to end, twice, in an Ubuntu container. Zimbra itself cannot run in a container, so the scenario installs a fake of it (`molecule/default/files/zcs-fake`) that records what the role asked of Zimbra, and checks it in `verify.yml`. It needs Docker:
   ```
   pip install -r requirements.txt
-  ansible-galaxy collection install -r requirements.yml community.docker
+  ansible-galaxy collection install -r requirements.yml
+  ansible-galaxy collection install community.docker
   molecule test
   ```
 
