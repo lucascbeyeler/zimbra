@@ -1,0 +1,45 @@
+---
+# Name of this server in Zimbra
+zimbra_server_name: "{{ hostname }}.{{ domain }}"
+
+# Installer build for this distribution, empty when zm_repo has none
+zimbra_build: >-
+  {{ zm_repo[zimbra_version | string].builds[ansible_distribution | lower][ansible_distribution_major_version | int]
+     | default('') }}
+
+# Packages in the order the installer asks for them. The installer of
+# Zimbra 8.8.15 also asks for Chat, Drive and IMAPD.
+zimbra_package_selection:
+  - {name: zimbra-ldap, enabled: "{{ zimbra_ldap }}"}
+  - {name: zimbra-logger, enabled: "{{ zimbra_logger }}"}
+  - {name: zimbra-mta, enabled: "{{ zimbra_mta }}"}
+  - {name: zimbra-dnscache, enabled: "{{ zimbra_dnscache }}"}
+  - {name: zimbra-snmp, enabled: "{{ zimbra_snmp }}"}
+  - {name: zimbra-store, enabled: "{{ zimbra_store }}"}
+  - {name: zimbra-apache, enabled: "{{ zimbra_apache }}"}
+  - {name: zimbra-spell, enabled: "{{ zimbra_spell }}"}
+  - {name: zimbra-memcached, enabled: "{{ zimbra_memcached }}"}
+  - {name: zimbra-proxy, enabled: "{{ zimbra_proxy }}"}
+zimbra_package_selection_8815:
+  - {name: zimbra-chat, enabled: "{{ zimbra_chat }}"}
+  - {name: zimbra-drive, enabled: "{{ zimbra_drive }}"}
+  - {name: zimbra-imapd, enabled: "{{ zimbra_imapd }}"}
+zimbra_packages: >-
+  {{ zimbra_package_selection
+     + (zimbra_package_selection_8815 if zimbra_version | string == '8.8.15' else []) }}
+
+# zmlocalconfig settings set to true on the MTA
+zimbra_antispam_settings:
+  # SpamAssassin Auto Update
+  - antispam_enable_rule_updates
+  # Restart Amavis when the rules are updated
+  - antispam_enable_restarts
+  # SpamAssassin rule compilation
+  - antispam_enable_rule_compilation
+
+# Domain settings for the logos (zmlogologin and zmlogoapp)
+zimbra_logo_settings:
+  # Where the logos link to
+  - {name: zimbraSkinLogoURL, value: "https://{{ zimbra_server_name }}"}
+  - {name: zimbraSkinLogoLoginBanner, value: /img/logoLoginBanner.png}
+  - {name: zimbraSkinLogoAppBanner, value: /img/logoAppBanner.png}

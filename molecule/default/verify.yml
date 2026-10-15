@@ -1,0 +1,162 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    #
+    # What the role asked of the fake Zimbra
+    ############################################################################
+    - name: Read the fake Zimbra state and calls
+      ansible.builtin.slurp:
+        src: "{{ item }}"
+      register: fake_files
+      loop:
+        - /opt/zimbra/.fake-state.json
+        - /opt/zimbra/log/fake-calls.log
+        - /opt/zimbra/log/install-keystrokes
+        - /opt/zimbra/log/install-files
+        - /opt/zimbra/log/zmsetup-config
+        - /var/log/fake-zmbackup/calls
+        - /var/log/fake-zmbackup/env
+
+    - name: Parse the fake Zimbra files
+      ansible.builtin.set_fact:
+        state: "{{ fake_files.results[0].content | b64decode | from_json }}"
+        calls: "{{ fake_files.results[1].content | b64decode | trim | split('\n') | map('from_json') | list }}"
+        keystrokes: "{{ fake_files.results[2].content | b64decode | trim | split('\n') }}"
+        install_files: "{{ fake_files.results[3].content | b64decode | trim | split('\n') }}"
+        zmsetup_config: "{{ fake_files.results[4].content | b64decode }}"
+        zmbackup_calls: "{{ fake_files.results[5].content | b64decode | trim | split('\n') }}"
+        zmbackup_env: "{{ fake_files.results[6].content | b64decode | trim | split('\n') }}"
+
+    - name: Check only zmsetup.pl ran as root
+      ansible.builtin.assert:
+        that:
+          - calls | selectattr('user', '!=', 'zimbra') | map(attribute='command') | list == ['zmsetup.pl']
+
+    # Once after the install, and not again on the idempotence run
+    - name: Check Zimbra was restarted once
+      ansible.builtin.assert:
+        that:
+          - calls | selectattr('command', '==', 'zmcontrol') | list | length == 1
+
+    - name: Check the installer answers (spell checker off, Chat, Drive and IMAPD asked by 8.8.15)
+      ansible.builtin.assert:
+        that:
+          - keystrokes == ['y', 'y', 'y', 'y', 'y', 'n', 'n', 'y', 'y', 'n', 'y', 'y', 'n', 'n', 'n', 'y']
+        fail_msg: "{{ keystrokes }}"
+
+    - name: Check if the installer files were removed
+      ansible.builtin.stat:
+        path: /tmp/zcs
+      register: tmp_zcs_stat
+
+    - name: Check the installer files were only readable by root and then removed
+      ansible.builtin.assert:
+        that:
+          - install_files == ['/tmp/zcs 700 root', '/tmp/zcs/installZimbra-keystrokes 600 root',
+                              '/tmp/zcs/installZimbraScript 600 root']
+          - not tmp_zcs_stat.stat.exists
+
+    - name: Check the installer configuration
+      ansible.builtin.assert:
+        that:
+          - zmsetup_config is search('^HOSTNAME="mail.example.com"$', multiline=true)
+          - zmsetup_config is search('^CREATEADMINPASS="S3cretPass"$', multiline=true)
+          - zmsetup_config is search('^zimbraMtaMyNetworks="127.0.0.0/8 \[::1\]/128 10.10.0.0/16"$', multiline=true)
+          - zmsetup_config is search(expected_packages, multiline=true)
+      vars:
+        expected_packages: >-
+          ^INSTALL_PACKAGES="zimbra-core zimbra-ldap zimbra-logger zimbra-mta zimbra-store
+          zimbra-apache zimbra-memcached zimbra-proxy"$
+
+    - name: Check the server configuration
+      ansible.builtin.assert:
+        that:
+          - server.zimbraReverseProxyMailMode == ['redirect']
+          - server.zimbraReverseProxyAdminEnabled == ['TRUE']
+          - server.zimbraServiceInstalled == ['cbpolicyd']
+          - server.zimbraServiceEnabled == ['cbpolicyd']
+          # The RBLs that were shut down are gone
+          - server.zimbraMtaRestriction == ['reject_rbl_client zen.spamhaus.org', 'reject_rbl_client bl.spamcop.net']
+          - state.config.zimbraMtaLmtpHostLookup == ['native']
+          - state.localconfig.antispam_enable_rule_updates == 'true'
+          - state.localconfig.antispam_enable_restarts == 'true'
+          - state.localconfig.antispam_enable_rule_compilation == 'true'
+        fail_msg: "{{ state | to_json }}"
+      vars:
+        server: "{{ state.servers['mail.example.com'] }}"
+
+    - name: Check the domain logos
+      ansible.builtin.assert:
+        that:
+          - domain.zimbraSkinLogoURL == ['https://mail.example.com']
+          - domain.zimbraSkinLogoLoginBanner == ['/img/logoLoginBanner.png']
+          - domain.zimbraSkinLogoAppBanner == ['/img/logoAppBanner.png']
+      vars:
+        domain: "{{ state.domains['example.com'] }}"
+
+    #
+    # Files
+    ############################################################################
+    - name: Check the files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: files
+      loop:
+        - /opt/zimbra/data/spamassassin/localrules/sauser.cf
+        - /opt/zimbra/data/spamassassin/localrules/sakam.cf
+        - /opt/zimbra/jetty/webapps/zimbra/img/logoLoginBanner.png
+        - /opt/zimbra/jetty/webapps/zimbra/img/logoAppBanner.png
+        - /opt/zimbra/common/share/webui/includes/config.php
+        - /opt/zimbra/data/amavisd/.pyzor/servers
+        - /opt/zimbra/data/amavisd/.razor/identity
+
+    - name: Check the files exist
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+        quiet: true
+      loop: "{{ files.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    # Amavis runs SpamAssassin as zimbra
+    - name: Check zimbra can read the SpamAssassin rules
+      ansible.builtin.assert:
+        that:
+          - item.stat.pw_name == 'zimbra'
+          - item.stat.mode == '0440'
+      loop: "{{ files.results[:2] }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Check the PolicyD web interface link
+      ansible.builtin.stat:
+        path: /opt/zimbra/data/httpd/htdocs/webui
+      register: webui
+
+    - name: Check the PolicyD web interface is enabled
+      ansible.builtin.command: grep -qx '    DirectoryIndex index.html index.html.var index.php' /opt/zimbra/conf/httpd.conf
+      changed_when: false
+
+    - name: Check the PolicyD web interface link points to the web UI
+      ansible.builtin.assert:
+        that:
+          - webui.stat.islnk
+          - webui.stat.lnk_source == '/opt/zimbra/common/share/webui'
+
+    #
+    # Zmbackup
+    ############################################################################
+    - name: Check Zmbackup was installed once, with its settings
+      ansible.builtin.assert:
+        that:
+          - zmbackup_calls == ['--unattended']
+          - "'OSE_INSTALL_DOMAIN=example.com' in zmbackup_env"
+          - "'OSE_INSTALL_ADDRESS=mail.example.com' in zmbackup_env"
+          - "'ZMBKP_REST_ADMIN=admin@example.com' in zmbackup_env"
+          - "'ZMBKP_REST_ADMIN_PASS=S3cretPass' in zmbackup_env"
+          - "'LOCK_BACKUP=true' in zmbackup_env"
+          - "'ROTATE_TIME=30' in zmbackup_env"
+        fail_msg: "{{ zmbackup_env }}"

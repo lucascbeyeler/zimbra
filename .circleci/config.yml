@@ -1,0 +1,48 @@
+version: 2.1
+jobs:
+  lint:
+    docker:
+      - image: cimg/python:3.12
+    # tests/test.yml finds the role by its folder name
+    working_directory: ~/zimbra
+    steps:
+      - checkout
+      - run:
+          name: Install Ansible
+          command: pip install -r requirements.txt
+      - run:
+          name: Install the collections
+          command: ansible-galaxy collection install -r requirements.yml
+      - run:
+          name: Create ansible.cfg
+          command: printf '[defaults]\nroles_path=../\n' >ansible.cfg
+      - run:
+          name: Lint the role
+          command: ansible-lint
+      - run:
+          name: Syntax check
+          command: ansible-playbook -i tests/inventory tests/test.yml --syntax-check
+      - run:
+          name: Unit tests
+          command: ansible-playbook tests/unit/main.yml
+  molecule:
+    machine:
+      image: ubuntu-2404:current
+    working_directory: ~/zimbra
+    steps:
+      - checkout
+      - run:
+          name: Run Molecule
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+            ansible-galaxy collection install -r requirements.yml
+            ansible-galaxy collection install community.docker
+            molecule test
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - lint
+      - molecule

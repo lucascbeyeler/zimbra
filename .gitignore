@@ -1,2 +1,7 @@
 OLD
 .idea
+.ansible
+ansible.cfg
+venv
+.venv
+__pycache__

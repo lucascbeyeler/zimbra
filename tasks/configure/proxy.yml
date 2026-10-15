@@ -1,9 +1,23 @@
+---
 #
 # Configuring Zimbra OSE
 ################################################################################
+- name: Checking if Zimbra's admin is enabled through Proxy Server
+  ansible.builtin.command: ./zmprov gs {{ zimbra_server_name }} zimbraReverseProxyAdminEnabled
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+  register: zimbra_proxy_admin
+  changed_when: false
+  check_mode: false
+
 - name: Enabling Zimbra's admin through Proxy Server
-  command: ./zmproxyconfig -e -w -C -H "{{ hostname }}"."{{ domain }}"
+  ansible.builtin.command: ./zmproxyconfig -e -w -C -H {{ zimbra_server_name }}
   args:
     chdir: /opt/zimbra/libexec/
-  become: yes
+  become: true
   become_user: zimbra
+  when: "'zimbraReverseProxyAdminEnabled: TRUE' not in zimbra_proxy_admin.stdout_lines"
+  changed_when: true
+  notify: Restart Zimbra

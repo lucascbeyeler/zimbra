@@ -1,3 +1,4 @@
+---
 absent:
   - postfix
   - sendmail
@@ -36,16 +37,36 @@ zimbra_zmbackup: n
 hostname: "localhost"
 domain: "localdomain"
 zmpasswd: "!23Change"
-zmnetwork: "192.168.200.0/8"
+zmnetwork: "192.168.200.0/24"
 timezone: UTC
-#hosts_lines:
-#  - "198.162.1.3 {{ hostname }}.{{ domain }} {{ hostname }}" 
+# hosts_lines:
+#   - "198.162.1.3 {{ hostname }}.{{ domain }} {{ hostname }}"
 disable_existing_dns_stub_listener: n
+
+#
+# Anti-spam
+################################################################################
+# DNS blocklists Postfix checks before accepting a message
+zimbra_rbls:
+  - zen.spamhaus.org
+  - bl.spamcop.net
+
+# Blocklists that were shut down and are removed if an older version of this
+# role added them
+zimbra_rbls_absent:
+  - dsn.rfc-ignorant.org
+  - dnsbl.sorbs.net
+
+# Kevin McGrail's SpamAssassin rules
+zimbra_kam_url: https://www.pccc.com/downloads/SpamAssassin/contrib/KAM.cf
 
 #
 # Zimbra installers
 ################################################################################
 zimbra_version: 8.8.15
+
+# Validate the TLS certificate of the server the installer is downloaded from
+zimbra_download_validate_certs: true
 
 zm_repo:
   8.8.15:
@@ -65,7 +86,7 @@ zm_repo:
         7: zcs-8.8.15_GA_3869.RHEL7_64.20190918004220
         8: zcs-8.8.15_GA_3953.RHEL8_64.20200629025823
 
-zimbra_upgrade: false
+zimbra_upgrade: n
 
 #
 # Zmbackup - only used when zimbra_zmbackup is "y"
@@ -95,4 +116,4 @@ zmbackup_environment:
   ZMBKP_MAIL_SENDER: "{{ zmbackup_mail_sender }}"
   MAX_PARALLEL_PROCESS: "{{ zmbackup_parallel_process }}"
   ROTATE_TIME: "{{ zmbackup_rotate_days }}"
-  LOCK_BACKUP: "{{ zmbackup_lock_backup | bool | lower }}"
+  LOCK_BACKUP: "{{ zmbackup_lock_backup | zimbra_bool | lower }}"

@@ -1,49 +1,89 @@
 ---
 #
+# Configuring RBLs
+################################################################################
+- name: Reading the RBLs
+  ansible.builtin.command: ./zmprov gs {{ zimbra_server_name }} zimbraMtaRestriction
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+  register: zimbra_mta_restrictions
+  changed_when: false
+  check_mode: false
+
+- name: Removing the RBLs that were shut down
+  ansible.builtin.command: ./zmprov ms {{ zimbra_server_name }} -zimbraMtaRestriction "reject_rbl_client {{ item }}"
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+  loop: "{{ zimbra_rbls_absent }}"
+  when: "('zimbraMtaRestriction: reject_rbl_client ' ~ item) in zimbra_mta_restrictions.stdout_lines"
+  changed_when: true
+  notify: Restart Zimbra
+
+- name: Importing the RBLs
+  ansible.builtin.command: ./zmprov ms {{ zimbra_server_name }} +zimbraMtaRestriction "reject_rbl_client {{ item }}"
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+  loop: "{{ zimbra_rbls }}"
+  when: "('zimbraMtaRestriction: reject_rbl_client ' ~ item) not in zimbra_mta_restrictions.stdout_lines"
+  changed_when: true
+  notify: Restart Zimbra
+
+#
 # Configuring SpamAssassin
 ################################################################################
 - name: Downloading and Installing Kevin McGrail's Custom Rules
-  get_url:
-    url: https://www.pccc.com/downloads/SpamAssassin/contrib/KAM.cf
+  ansible.builtin.get_url:
+    url: "{{ zimbra_kam_url }}"
     dest: /opt/zimbra/data/spamassassin/localrules/sakam.cf
-    mode: 0440
     owner: zimbra
     group: zimbra
+    mode: "0440"
+  notify: Restart Zimbra
 
+# Amavis runs SpamAssassin as zimbra, so zimbra must be able to read the rules
 - name: Configuring sauser.cf With new Scores
-  copy:
+  ansible.builtin.copy:
     src: sauser.cf
     dest: /opt/zimbra/data/spamassassin/localrules/sauser.cf
-    owner: root
-    group: root
-    mode: 0440
-    
-- name: Enabling SpamAssassin Auto Update
-  command: ./zmlocalconfig -e antispam_enable_rule_updates=true
-  args:
-    chdir: /opt/zimbra/bin/
-  become: true
-  become_user: zimbra
-    
-- name: Enabling Amavis to restart when the rules are update
-  command: ./zmlocalconfig -e antispam_enable_restarts=true
-  args:
-    chdir: /opt/zimbra/bin/
-  become: true
-  become_user: zimbra
+    owner: zimbra
+    group: zimbra
+    mode: "0440"
+  notify: Restart Zimbra
 
-- name: Enabling SpamAssassin rule compilation
-  command: ./zmlocalconfig -e antispam_enable_rule_compilation=true
+- name: Reading the SpamAssassin settings
+  ansible.builtin.command: ./zmlocalconfig {{ zimbra_antispam_settings | join(' ') }}
   args:
     chdir: /opt/zimbra/bin/
   become: true
   become_user: zimbra
+  register: zimbra_antispam_config
+  changed_when: false
+  check_mode: false
+
+- name: Enabling SpamAssassin Auto Update, restarts and rule compilation
+  ansible.builtin.command: ./zmlocalconfig -e {{ item }}=true
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+  loop: "{{ zimbra_antispam_settings }}"
+  when: (item ~ ' = true') not in zimbra_antispam_config.stdout_lines
+  changed_when: true
+  notify: Restart Zimbra
 
 #
 # Configuring Pyzor
 ################################################################################
 - name: Downloading and Configuring Pyzor's Anti-spam Base
-  command: pyzor --homedir /opt/zimbra/data/amavisd/.pyzor discover
+  ansible.builtin.command: pyzor --homedir /opt/zimbra/data/amavisd/.pyzor discover
+  args:
+    creates: /opt/zimbra/data/amavisd/.pyzor/servers
   become: true
   become_user: zimbra
 
@@ -51,17 +91,23 @@
 # Configuring Razor
 ################################################################################
 - name: Creating Razor's Anti-spam Base
-  command: razor-admin -home=/opt/zimbra/data/amavisd/.razor -create
+  ansible.builtin.command: razor-admin -home=/opt/zimbra/data/amavisd/.razor -create
+  args:
+    creates: /opt/zimbra/data/amavisd/.razor/razor-agent.conf
   become: true
   become_user: zimbra
 
 - name: Downloading Razor's Anti-spam Base
-  command: razor-admin -home=/opt/zimbra/data/amavisd/.razor -discover
+  ansible.builtin.command: razor-admin -home=/opt/zimbra/data/amavisd/.razor -discover
+  args:
+    creates: /opt/zimbra/data/amavisd/.razor/servers.discovery.lst
   become: true
   become_user: zimbra
 
 - name: Registering your Razor installation
-  command: 'razor-admin -home=/opt/zimbra/data/amavisd/.razor -register'
+  ansible.builtin.command: razor-admin -home=/opt/zimbra/data/amavisd/.razor -register
+  args:
+    creates: /opt/zimbra/data/amavisd/.razor/identity
   become: true
   become_user: zimbra
 
@@ -69,25 +115,26 @@
 # Configuring PolicyD
 ################################################################################
 - name: Configuring PolicyD Database
-  copy:
-    src: 'config.php'
+  ansible.builtin.copy:
+    src: config.php
     dest: /opt/zimbra/common/share/webui/includes/config.php
     owner: root
     group: root
-    mode: 0644
-  when: zimbra_policyd == 'y'
+    mode: "0644"
+  when: zimbra_policyd | zimbra_bool
 
 - name: Configuring PolicyD Web Interface
-  file:
+  ansible.builtin.file:
     src: /opt/zimbra/common/share/webui
     dest: /opt/zimbra/data/httpd/htdocs/webui
     state: link
-  when: zimbra_policyd == 'y'
+  when: zimbra_policyd | zimbra_bool
 
 - name: Enable PolicyD Web Interface
-  lineinfile:
-    dest: /opt/zimbra/conf/httpd.conf
+  ansible.builtin.lineinfile:
+    path: /opt/zimbra/conf/httpd.conf
     regexp: "^    DirectoryIndex index.html index.html.var"
     line: "    DirectoryIndex index.html index.html.var index.php"
     state: present
-  when: zimbra_policyd == 'y'
+  when: zimbra_policyd | zimbra_bool
+  notify: Restart Zimbra

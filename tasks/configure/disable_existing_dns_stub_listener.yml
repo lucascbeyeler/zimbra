@@ -1,28 +1,21 @@
 ---
-
 - name: Disable local resolver
-  ansible.builtin.ini_file:
+  community.general.ini_file:
     path: /etc/systemd/resolved.conf
     section: Resolve
     option: DNSStubListener
     value: "no"
-  register: disable_dns_stub_listener
+    no_extra_spaces: true
+    mode: "0644"
+  notify: Restart systemd-resolved
 
-- name: Delete symbolic link
-  file:
-    path: /etc/resolv.conf
-    state: absent
-  when: disable_dns_stub_listener.changed
-
-- name: Create symbolic link
-  file:
+- name: Point /etc/resolv.conf to the upstream DNS servers
+  ansible.builtin.file:
     path: /etc/resolv.conf
     src: /run/systemd/resolve/resolv.conf
     state: link
-  when: disable_dns_stub_listener.changed
+    force: true
 
-- name: Restart systemd-resolved service
-  ansible.builtin.service:
-    name: systemd-resolved
-    state: restarted
-  when: disable_dns_stub_listener.changed
+# Port 53 must be free before zimbra-dnscache is installed or restarted
+- name: Applying the systemd-resolved changes
+  ansible.builtin.meta: flush_handlers

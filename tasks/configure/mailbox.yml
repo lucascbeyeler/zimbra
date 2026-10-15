@@ -2,50 +2,42 @@
 #
 # Configuring Zimbra OSE
 ################################################################################
-- name: Enabling HTTP to HTTPS redirect
-  command: ./zmprov ms "{{ hostname }}"."{{ domain }}" zimbraReverseProxyMailMode redirect
+- name: Reading the server configuration
+  ansible.builtin.command: ./zmprov gs {{ zimbra_server_name }} zimbraReverseProxyMailMode
   args:
     chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+  register: zimbra_mailbox_server_config
+  changed_when: false
+  check_mode: false
+
+- name: Enabling HTTP to HTTPS redirect
+  ansible.builtin.command: ./zmprov ms {{ zimbra_server_name }} zimbraReverseProxyMailMode redirect
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+  when: "'zimbraReverseProxyMailMode: redirect' not in zimbra_mailbox_server_config.stdout_lines"
+  changed_when: true
+  notify: Restart Zimbra
+
+- name: Reading the global configuration
+  ansible.builtin.command: ./zmprov gcf zimbraMtaLmtpHostLookup
+  args:
+    chdir: /opt/zimbra/bin/
+  become: true
+  become_user: zimbra
+  register: zimbra_mailbox_global_config
+  changed_when: false
+  check_mode: false
 
 - name: Setting LMTP Host Lookup from DNS to Native
-  command: ./zmprov mcf zimbraMtaLmtpHostLookup native
-  args:
-    chdir: /opt/zimbra/bin/
-
-#
-# Configuring RBLs
-################################################################################
-- name: Importing zen.spamhaus.org RBL
-  command: ./zmprov ms "{{hostname}}"."{{domain}}" +zimbraMtaRestriction 'reject_rbl_client zen.spamhaus.org'
+  ansible.builtin.command: ./zmprov mcf zimbraMtaLmtpHostLookup native
   args:
     chdir: /opt/zimbra/bin/
   become: true
   become_user: zimbra
-
-- name: Importing sbl.spamhaus.org RBL
-  command: ./zmprov ms "{{hostname}}"."{{domain}}" +zimbraMtaRestriction 'reject_rbl_client sbl.spamhaus.org'
-  args:
-    chdir: /opt/zimbra/bin/
-  become: true
-  become_user: zimbra
-
-- name: Importing dsn.rfc-ignorant.org RBL
-  command: ./zmprov ms "{{hostname}}"."{{domain}}" +zimbraMtaRestriction 'reject_rbl_client dsn.rfc-ignorant.org'
-  args:
-    chdir: /opt/zimbra/bin/
-  become: true
-  become_user: zimbra
-
-- name: Importing bl.spamcop.net RBL
-  command: ./zmprov ms "{{hostname}}"."{{domain}}" +zimbraMtaRestriction 'reject_rbl_client bl.spamcop.net'
-  args:
-    chdir: /opt/zimbra/bin/
-  become: true
-  become_user: zimbra
-
-- name: Importing dnsbl.sorbs.net RBL
-  command: ./zmprov ms "{{hostname}}"."{{domain}}" +zimbraMtaRestriction 'reject_rbl_client dnsbl.sorbs.net'
-  args:
-    chdir: /opt/zimbra/bin/
-  become: true
-  become_user: zimbra
+  when: "'zimbraMtaLmtpHostLookup: native' not in zimbra_mailbox_global_config.stdout_lines"
+  changed_when: true
+  notify: Restart Zimbra

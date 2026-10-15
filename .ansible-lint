@@ -1,0 +1,5 @@
+---
+# Role variables (hostname, domain, zmpasswd, ...) predate the zimbra_ prefix
+# convention; renaming them would break existing playbooks.
+skip_list:
+  - var-naming[no-role-prefix]
