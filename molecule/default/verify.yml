@@ -46,6 +46,16 @@
           - zimbra_ansible_tmp.stat.pw_name == 'zimbra'
           - zimbra_ansible_tmp.stat.mode == '0700'
 
+    - name: Read the installed Razor and Pyzor packages
+      ansible.builtin.command: dpkg-query -W -f '${Status}\n' razor pyzor
+      register: razor_pyzor
+      changed_when: false
+
+    - name: Check the role enabled universe to install Razor and Pyzor
+      ansible.builtin.assert:
+        that:
+          - razor_pyzor.stdout_lines == ['install ok installed', 'install ok installed']
+
     # Once after the install, and not again on the idempotence run
     - name: Check Zimbra was restarted once
       ansible.builtin.assert:

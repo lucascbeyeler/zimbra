@@ -13,6 +13,32 @@
     state: present
   when: ansible_os_family == "RedHat"
 
+# Razor and Pyzor live in Ubuntu's universe component, which minimal and cloud
+# images of Ubuntu Server often ship without
+- name: Enabling the universe repository (Ubuntu)
+  when: ansible_distribution == "Ubuntu"
+  block:
+    # apt-cache show succeeds when other packages only mention razor, while
+    # madison lists nothing unless a repository has it
+    - name: Checking if Razor can be installed
+      ansible.builtin.command: apt-cache madison razor
+      register: apt_cache_razor
+      changed_when: false
+      check_mode: false
+
+    - name: Installing add-apt-repository
+      ansible.builtin.apt:
+        name: software-properties-common
+        state: present
+        update_cache: true
+      when: apt_cache_razor.stdout | length == 0
+
+    # add-apt-repository updates the APT cache as well
+    - name: Enabling the universe repository
+      ansible.builtin.command: add-apt-repository -y universe
+      changed_when: true
+      when: apt_cache_razor.stdout | length == 0
+
 - name: Ensure Pyzor and Razor is installed (Ubuntu)
   ansible.builtin.apt:
     name: "{{ ubuntu }}"

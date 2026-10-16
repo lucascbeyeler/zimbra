@@ -8,6 +8,18 @@
       ansible.builtin.raw: apt-get update && apt-get install -y python3 sudo acl git
       changed_when: true
 
+    # Like the minimal and cloud images of Ubuntu Server, where Razor and Pyzor
+    # cannot be installed until the role enables universe
+    - name: Disable the universe repository
+      ansible.builtin.lineinfile:
+        path: /etc/apt/sources.list
+        regexp: universe
+        state: absent
+
+    - name: Update the APT cache without universe
+      ansible.builtin.apt:
+        update_cache: true
+
     - name: Create the folders for the fakes
       ansible.builtin.file:
         path: "{{ item }}"
