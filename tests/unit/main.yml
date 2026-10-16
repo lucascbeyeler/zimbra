@@ -201,6 +201,40 @@
           zimbra-apache zimbra-spell zimbra-memcached zimbra-proxy"$
 
     #
+    # Firewall
+    ############################################################################
+    - name: Check the firewall ports with the defaults
+      ansible.builtin.assert:
+        that:
+          - zimbra_firewall_ports == expected
+        fail_msg: "{{ zimbra_firewall_ports }}"
+      vars:
+        expected: [25/tcp, 465/tcp, 587/tcp, 80/tcp, 443/tcp, 110/tcp, 995/tcp, 143/tcp, 993/tcp,
+                   7071/tcp, 9071/tcp]
+
+    - name: Check the firewall ports of a mailbox without MTA nor proxy
+      ansible.builtin.assert:
+        that:
+          - zimbra_firewall_ports == expected
+        fail_msg: "{{ zimbra_firewall_ports }}"
+      vars:
+        zimbra_mta: n
+        zimbra_proxy: false
+        expected: [80/tcp, 443/tcp, 110/tcp, 995/tcp, 143/tcp, 993/tcp, 7071/tcp]
+
+    - name: Check the firewall ports of an MTA, without the admin console, with extra ports
+      ansible.builtin.assert:
+        that:
+          - zimbra_firewall_ports == expected
+        fail_msg: "{{ zimbra_firewall_ports }}"
+      vars:
+        zimbra_store: n
+        zimbra_proxy: n
+        zimbra_firewall_admin: "no"
+        zimbra_firewall_extra_ports: [389/tcp, 25/tcp]
+        expected: [25/tcp, 465/tcp, 587/tcp, 389/tcp]
+
+    #
     # Defaults
     ############################################################################
     - name: Check the default network has no host bits set (Postfix rejects it)
@@ -227,6 +261,7 @@
           - not zimbra_policyd | bool
           - not zimbra_zmbackup | bool
           - not disable_existing_dns_stub_listener | bool
+          - not zimbra_firewall | bool
           - zimbra_download_validate_certs | bool
 
     #

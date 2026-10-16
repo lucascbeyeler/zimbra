@@ -1,0 +1,43 @@
+---
+#
+# firewalld - Red Hat, CentOS, Rocky...
+################################################################################
+- name: Checking if firewalld is running
+  ansible.builtin.command: firewall-cmd --state
+  register: firewalld_state
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: ansible_os_family == "RedHat"
+
+- name: Checking if firewalld is installed
+  ansible.builtin.assert:
+    that:
+      - firewalld_state.rc != 127
+    fail_msg: zimbra_firewall needs firewalld, which is not installed
+  when: ansible_os_family == "RedHat"
+
+# When firewalld is stopped, the ports are saved for when it starts
+- name: Opening the ports in firewalld
+  ansible.posix.firewalld:
+    port: "{{ item }}"
+    zone: "{{ zimbra_firewall_zone | default(omit, true) }}"
+    permanent: true
+    immediate: "{{ firewalld_state.rc == 0 }}"
+    offline: "{{ firewalld_state.rc != 0 }}"
+    state: enabled
+  loop: "{{ zimbra_firewall_ports }}"
+  when: ansible_os_family == "RedHat"
+
+#
+# ufw - Ubuntu
+################################################################################
+# ufw keeps the rules while it is disabled, and applies them when enabled
+- name: Opening the ports in ufw
+  community.general.ufw:
+    rule: allow
+    port: "{{ item.split('/')[0] }}"
+    proto: "{{ item.split('/')[1] | default('tcp') }}"
+    comment: Zimbra
+  loop: "{{ zimbra_firewall_ports }}"
+  when: ansible_os_family == "Debian"

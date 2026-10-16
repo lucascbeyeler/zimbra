@@ -16,7 +16,7 @@ Requirements
 ------------
 
 * [Ansible](https://github.com/ansible/ansible) 2.15 or higher.
-* The `community.general` collection:
+* The `ansible.posix` and `community.general` collections:
   ```
   ansible-galaxy collection install -r requirements.yml
   ```
@@ -58,6 +58,7 @@ Features
 * Upgrade an existing Zimbra installation to a newer version (**zimbra_upgrade**);
 * Run many times you want to apply the configuration - installation only occur if the server has no Zimbra installed, every setting is changed only when it differs from what you asked, and Zimbra is restarted only when something changed;
 * Fail with a clear message before downloading anything when **zm_repo** has no installer for your distribution;
+* Optionally open the ports of the enabled services in firewalld (Red Hat family) or ufw (Ubuntu) (**zimbra_firewall**);
 * Optionally disable the systemd-resolved DNS stub listener, so zimbra-dnscache can use port 53;
 * Configure the MTA's DNS blocklists (RBLs), and remove the ones that were shut down;
 * Configuring SpamAssassin, Pyzor, Razor and Kevin McGrail's KAM rules;
@@ -105,6 +106,25 @@ zm_repo:
 * **disable_existing_dns_stub_listener:** Inform "y" to disable the systemd-resolved DNS stub listener and free up port 53. Default: **n**
 
 * **zimbra_upgrade:** Inform "y" to upgrade an existing Zimbra installation. Zimbra will be upgraded to **zimbra_version** version. See [Upgrading Zimbra](#upgrading-zimbra). Default: **n**
+
+Firewall Variables
+--------------
+
+With **zimbra_firewall: y**, the role opens the ports of the services you enabled with firewalld (`firewall-cmd`) on Red Hat, CentOS, Rocky and the other distributions of the Red Hat family, and with ufw on Ubuntu. The firewall must already be installed; the role does not install, enable or start it. When firewalld is stopped the ports are saved in its permanent configuration, and when ufw is disabled it keeps the rules, so they apply once the firewall starts. Ports are only opened, never closed.
+
+| Service | Ports |
+|---|---|
+| **zimbra_mta** | 25 (SMTP), 465 (SMTPS), 587 (Submission) |
+| **zimbra_proxy** or **zimbra_store** | 80 (HTTP), 443 (HTTPS), 110 (POP3), 995 (POP3S), 143 (IMAP), 993 (IMAPS) |
+| **zimbra_store**, with **zimbra_firewall_admin** | 7071 (admin console) |
+| **zimbra_proxy**, with **zimbra_firewall_admin** | 9071 (admin console through the proxy) |
+
+* **zimbra_firewall:** Inform "y" to open the ports of the enabled services in the firewall - default: **n**
+* **zimbra_firewall_admin:** Inform "n" to keep the admin console ports (7071 and 9071) closed - default: **y**
+* **zimbra_firewall_zone:** firewalld zone the ports are opened in. Ignored by ufw - default: **""** (firewalld's default zone)
+* **zimbra_firewall_extra_ports:** Other ports to open, as `port/protocol`, like `389/tcp` for the LDAP of a multi-server setup - default: **[]**
+
+Opening the ports on Red Hat needs the `ansible.posix` collection, which is in `requirements.yml`.
 
 Service Variables - Inform "y" or "n"
 --------------
@@ -217,6 +237,7 @@ Example Playbook
            zmlogologin: /tmp/login.png
            zmlogoapp: /tmp/app.png
            zimbra_zmbackup: y
+           zimbra_firewall: y
 ```
 
 Installing Zimbra 10.1 on a server prepared by baseline:

@@ -3,9 +3,10 @@
   hosts: all
   gather_facts: false
   tasks:
-    # acl lets Ansible become the zimbra user
-    - name: Install Python 3, sudo, acl and git
-      ansible.builtin.raw: apt-get update && apt-get install -y python3 sudo acl git
+    # acl lets Ansible become the zimbra user, ufw is the firewall the role
+    # opens the ports in
+    - name: Install Python 3, sudo, acl, git and ufw
+      ansible.builtin.raw: apt-get update && apt-get install -y python3 sudo acl git ufw
       changed_when: true
 
     # Like the minimal and cloud images of Ubuntu Server, where Razor and Pyzor
