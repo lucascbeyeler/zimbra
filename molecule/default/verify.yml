@@ -62,10 +62,10 @@
         that:
           - calls | selectattr('command', '==', 'zmcontrol') | list | length == 1
 
-    - name: Check the installer answers (spell checker off, Chat, Drive and IMAPD asked by 8.8.15)
+    - name: Check the installer answers (spell checker off)
       ansible.builtin.assert:
         that:
-          - keystrokes == ['y', 'y', 'y', 'y', 'y', 'n', 'n', 'y', 'y', 'n', 'y', 'y', 'n', 'n', 'n', 'y']
+          - keystrokes == ['y', 'y', 'y', 'y', 'y', 'n', 'n', 'y', 'y', 'n', 'y', 'y', 'y']
         fail_msg: "{{ keystrokes }}"
 
     - name: Check if the installer files were removed
