@@ -21,6 +21,7 @@ Requirements
   ansible-galaxy collection install -r requirements.yml
   ```
 * A server prepared by [lucascbeyeler.baseline](https://github.com/lucascbeyeler/baseline) (see [Dependencies](#dependencies)).
+* To build Zimbra from source (when **zm_repo** has no installer): several GB of free disk and access to GitHub, Maven Central and files.zimbra.com from the server. See [Building Zimbra from source](#building-zimbra-from-source).
 
 Supported Zimbra Versions
 --------------
