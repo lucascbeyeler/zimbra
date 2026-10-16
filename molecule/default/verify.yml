@@ -34,6 +34,18 @@
         that:
           - calls | selectattr('user', '!=', 'zimbra') | map(attribute='command') | list == ['zmsetup.pl']
 
+    - name: Read Ansible's temporary directory for the zimbra user
+      ansible.builtin.stat:
+        path: /opt/zimbra/.ansible/tmp
+      register: zimbra_ansible_tmp
+
+    - name: Check the zimbra user owns Ansible's temporary directory
+      ansible.builtin.assert:
+        that:
+          - zimbra_ansible_tmp.stat.isdir
+          - zimbra_ansible_tmp.stat.pw_name == 'zimbra'
+          - zimbra_ansible_tmp.stat.mode == '0700'
+
     # Once after the install, and not again on the idempotence run
     - name: Check Zimbra was restarted once
       ansible.builtin.assert:

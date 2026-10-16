@@ -31,6 +31,20 @@
   ansible.builtin.include_tasks: install/zimbra.yml
   when: zimbra_run_installer | bool
 
+# /opt/zimbra, the zimbra user's home, belongs to root, so the tasks run as
+# zimbra cannot create Ansible's ~/.ansible/tmp there and fall back to the
+# system temporary directory with a warning
+- name: Creating Ansible's temporary directory for the zimbra user
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: zimbra
+    group: zimbra
+    mode: "0700"
+  loop:
+    - /opt/zimbra/.ansible
+    - /opt/zimbra/.ansible/tmp
+
 - name: Installing PolicyD
   ansible.builtin.include_tasks: install/policyd.yml
   when: zimbra_policyd | zimbra_bool
