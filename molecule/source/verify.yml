@@ -1,0 +1,55 @@
+---
+# Zimbra was installed and configured as in the default scenario
+- name: Verify the install
+  ansible.builtin.import_playbook: ../default/verify.yml
+
+- name: Verify the build from source
+  hosts: all
+  gather_facts: false
+  vars:
+    build_dir: /usr/local/src/zimbra-build/10.1.15
+  tasks:
+    - name: Read how zm-build was run
+      ansible.builtin.slurp:
+        src: "{{ build_dir }}/fake-build/{{ item }}"
+      register: fake_build
+      loop:
+        - args
+        - env
+        - runs
+
+    - name: Read the tag of zm-build
+      ansible.builtin.command: git -C {{ build_dir }}/zm-build describe --tags  # noqa command-instead-of-module
+      register: zm_build_tag
+      changed_when: false
+      become: true
+      become_user: zmbuild
+
+    - name: Read the installer that was unpacked
+      ansible.builtin.stat:
+        path: /usr/local/src/zcs-10.1.15_GA_1000.UBUNTU22_64.20261016000000/install.sh
+      register: unpacked_installer
+
+    - name: Check Zimbra was built once, as zmbuild, from the newest tag up to 10.1.15
+      ansible.builtin.assert:
+        that:
+          - zm_build_tag.stdout == '10.1.13'
+          - runs == ['run']
+          - "'--git-default-tag=' ~ expected_tags in build_args"
+          - "'--build-release-no=10.1.15' in build_args"
+          - "'--build-type=FOSS' in build_args"
+          - "'--build-release-candidate=GA' in build_args"
+          - "'--build-thirdparty-server=files.zimbra.com' in build_args"
+          - "'--build-destination-base-dir=' ~ build_dir ~ '/BUILDS' in build_args"
+          - "'--no-interactive' in build_args"
+          - "'USER=zmbuild' in env"
+          - "'JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64' in env"
+          - "'ENV_CACHE_CLEAR_FLAG=true' in env"
+          - unpacked_installer.stat.exists
+        fail_msg: "{{ build_args }} {{ env }}"
+      vars:
+        build_args: "{{ fake_build.results[0].content | b64decode | trim | split('\n') }}"
+        env: "{{ fake_build.results[1].content | b64decode | trim | split('\n') }}"
+        runs: "{{ fake_build.results[2].content | b64decode | trim | split('\n') }}"
+        expected_tags: >-
+          10.1.15,10.1.14,10.1.13,10.1.12,10.1.11,10.1.10,10.1.9,10.1.8,10.1.7,10.1.6,10.1.5,10.1.4,10.1.3,10.1.2,10.1.1,10.1.0,10.1.0-GA

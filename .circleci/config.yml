@@ -39,7 +39,7 @@ jobs:
             pip install -r requirements.txt
             ansible-galaxy collection install -r requirements.yml
             ansible-galaxy collection install community.docker
-            molecule test
+            molecule test --all
 workflows:
   version: 2
   build-and-test:

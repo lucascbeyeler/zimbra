@@ -30,6 +30,7 @@
         - /srv/www
         - /srv/build/zcs-fake.UBUNTU22_64
         - /srv/git/zmbackup
+        - /srv/git/zm-build
         - /etc/fake-zimbra
 
     #
@@ -95,6 +96,35 @@
         git branch 2.0
       args:
         creates: /srv/git/zmbackup/.git
+
+    #
+    # zm-build repository, for the scenario that builds Zimbra from source. It
+    # has tags before and after 10.1.15, like the real one
+    ############################################################################
+    - name: Copy the fake zm-build and the installer it packs
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: "0755"
+      loop:
+        - {src: zm-build/build.pl, dest: /srv/git/zm-build/build.pl}
+        - {src: zcs-fake/, dest: /srv/git/zm-build/zcs-fake/}
+
+    - name: Create the zm-build repository
+      ansible.builtin.shell: |
+        set -e
+        cd /srv/git/zm-build
+        git init -q
+        git add build.pl zcs-fake
+        git -c user.name=Molecule -c user.email=molecule@example.com commit -q -m "Fake zm-build 10.1.13"
+        git tag 10.1.13
+        echo "# 10.1.16" >> build.pl
+        git -c user.name=Molecule -c user.email=molecule@example.com commit -q -am "Fake zm-build 10.1.16"
+        git tag 10.1.16
+        # zmbuild, not root, downloads it
+        git config --system --add safe.directory /srv/git/zm-build/.git
+      args:
+        creates: /srv/git/zm-build/.git
 
     #
     # An earlier version of the role added RBLs that were shut down since

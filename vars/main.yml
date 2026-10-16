@@ -7,6 +7,19 @@ zimbra_build: >-
   {{ zm_repo[zimbra_version | string].builds[ansible_distribution | lower][ansible_distribution_major_version | int]
      | default('') }}
 
+# Tags of the Zimbra sources a version is built from, newest first. Each
+# component of Zimbra is only tagged in the patches that changed it, so the
+# build uses the first of these tags each component has (10.1.15, 10.1.14...
+# 10.1.0, 10.1.0-GA)
+zimbra_version_parts: "{{ (zimbra_version | string).split('.') }}"
+zimbra_source_tags: >-
+  {{ range(zimbra_version_parts[2] | int, -1, -1)
+     | map('regex_replace', '^', zimbra_version_parts[0] ~ '.' ~ zimbra_version_parts[1] ~ '.')
+     | list + [zimbra_version_parts[0] ~ '.' ~ zimbra_version_parts[1] ~ '.0-GA'] }}
+
+# Folder the version is built in
+zimbra_source_build_dir: "{{ zimbra_source_dir }}/{{ zimbra_version }}"
+
 # Packages in the order the installer asks for them
 zimbra_packages:
   - {name: zimbra-ldap, enabled: "{{ zimbra_ldap }}"}

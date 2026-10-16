@@ -27,12 +27,12 @@ Supported Zimbra Versions
 
 | Zimbra | Installer builds | Distributions |
 |---|---|---|
-| **10.1** (latest, default) | Set in **zm_repo** | Ubuntu 20.04 and 22.04, Red Hat / CentOS / Rocky 8 and 9 |
-| **10.0** | Set in **zm_repo** | Ubuntu 20.04 and 22.04, Red Hat / CentOS / Rocky 8 and 9 |
+| **10.1** (latest, default) | Built from source, or set in **zm_repo** | Ubuntu 20.04 and 22.04, Red Hat / CentOS / Rocky 8 and 9 |
+| **10.0** | Built from source, or set in **zm_repo** | Ubuntu 20.04 and 22.04, Red Hat / CentOS / Rocky 8 and 9 |
 
-The distributions are the ones each Zimbra version supports; the role runs on any of them as long as **zm_repo** has a build for it.
+The distributions are the ones each Zimbra version supports.
 
-Zimbra does not publish the 10.x installers of the Open Source Edition, so the role has no builds out of the box: set **zimbra_version** to the version you want and point **zm_repo** to where your installers are (your own build or a mirror). See [Installing Zimbra 10.1](#installing-zimbra-101).
+Zimbra does not publish the 10.x installers of the Open Source Edition, so the role builds the installer from Zimbra's source code on the server, with Zimbra's own build tool. See [Building Zimbra from source](#building-zimbra-from-source). If you already have the installers (your own build or a mirror), set them in **zm_repo** and the role downloads them instead. See [Installing Zimbra 10.1](#installing-zimbra-101).
 
 Zimbra 8.8.15 and older are no longer supported: the role stops with a message when **zimbra_version** is older than 10.0. To keep using Zimbra 8.8.15, use an older release of this role.
 
@@ -58,7 +58,7 @@ Features
 * Install Zimbra 10.1 or 10.0, with only the services you choose;
 * Upgrade an existing Zimbra installation to a newer version (**zimbra_upgrade**);
 * Run many times you want to apply the configuration - installation only occur if the server has no Zimbra installed, every setting is changed only when it differs from what you asked, and Zimbra is restarted only when something changed;
-* Fail with a clear message before downloading anything when **zm_repo** has no installer for your distribution;
+* Build the Zimbra installer from source when you have none;
 * Optionally open the ports of the enabled services in firewalld (Red Hat family) or ufw (Ubuntu) (**zimbra_firewall**);
 * Optionally disable the systemd-resolved DNS stub listener, so zimbra-dnscache can use port 53;
 * Configure the MTA's DNS blocklists (RBLs), and remove the ones that were shut down;
@@ -82,12 +82,12 @@ Role Variables
 * **zmlogologin:** Inform the path for your logo (Login Screen) - don't inform and no image will be applied;
 * **zmlogoapp:** Inform the path for your logo (Application Screen) - don't inform and no image will be applied;
 * **timezone:** inform the timezone the playbook should set in your server;
-* **zimbra_version:** Inform which version of Zimbra you want to install, like **10.1.15** or **10.0.0**. It must be 10.0 or newer and a key of **zm_repo**. Default: **10.1.15**
+* **zimbra_version:** Inform which version of Zimbra you want to install, like **10.1.15** or **10.0.0**. It must be 10.0 or newer, in the form major.minor.patch. Default: **10.1.15**
 * **zimbra_download_validate_certs:** Validate the TLS certificate of the server Zimbra is downloaded from. Default: **true**
 * **zimbra_rbls:** DNS blocklists the MTA checks before accepting a message. Default: **zen.spamhaus.org** and **bl.spamcop.net**
 * **zimbra_rbls_absent:** DNS blocklists removed from the MTA. Default: **dsn.rfc-ignorant.org** and **dnsbl.sorbs.net**, which were shut down and were added by older versions of this role
 * **zimbra_kam_url:** Where Kevin McGrail's SpamAssassin rules (KAM.cf) are downloaded from
-* **zm_repo:** Variable to inform which repository of Zimbra builds you want to download from. For each version, you need to set **url**, and a dictionary of **builds** according to distribution and distribution major version. The role downloads `<url><build>.tgz`. The distribution is Ansible's `ansible_distribution` in lower case (`ubuntu`, `redhat`, `centos`, `rocky`, `almalinux`, `oraclelinux`...). The default is empty, so you must set it.
+* **zm_repo:** Variable to inform which repository of Zimbra builds you want to download from. For each version, you need to set **url**, and a dictionary of **builds** according to distribution and distribution major version. The role downloads `<url><build>.tgz`. The distribution is Ansible's `ansible_distribution` in lower case (`ubuntu`, `redhat`, `centos`, `rocky`, `almalinux`, `oraclelinux`...). When it has no build of **zimbra_version** for the server's distribution, the role builds the installer from source. Default: empty
 Example:
 ```
 zm_repo:
@@ -145,10 +145,41 @@ The "y"/"n" variables also accept "yes"/"no" and booleans (true/false).
 * **zimbra_policyd:**  Enable Zimbra PolicyD Service - default: **n**
 * **zimbra_zmbackup:**  Install [Zmbackup](https://github.com/lucascbeyeler/zmbackup) - default: **n**
 
+Building Zimbra from source
+--------------
+
+When **zm_repo** has no installer of **zimbra_version** for the server's distribution, which is the case with the defaults, the role builds one from source on the server before installing it:
+
+1. Installs the build tools: a Java 8 JDK, Ant, Maven, Ruby, Git, compilers and the packaging tools (**zimbra_source_packages_debian** or **zimbra_source_packages_redhat**);
+2. Creates the user **zimbra_source_user**, so the build does not run as root;
+3. Downloads [zm-build](https://github.com/Zimbra/zm-build), Zimbra's build tool, at the newest tag up to **zimbra_version** (each component is only tagged in the patches that changed it, so 10.1.15 may use the 10.1.13 tag);
+4. Runs zm-build's `build.pl`, which downloads the source of every Zimbra component from GitHub at the newest tag up to **zimbra_version**, the third-party packages from **zimbra_source_thirdparty_server**, and builds the installer:
+   ```
+   ./build.pl --ant-options -DskipTests=true --git-default-tag=10.1.15,10.1.14,...,10.1.0,10.1.0-GA \
+     --build-release-no=10.1.15 --build-release=LIBERTY --build-release-candidate=GA --build-type=FOSS \
+     --build-thirdparty-server=files.zimbra.com --no-interactive
+   ```
+5. Installs Zimbra with the installer it built, like a downloaded one.
+
+The build can take over an hour and needs several GB of free disk, and the server needs to reach GitHub, Maven Central and **zimbra_source_thirdparty_server**. Its log is in `<zimbra_source_dir>/<zimbra_version>/build.log`. The installer is kept in `<zimbra_source_dir>/<zimbra_version>/BUILDS`, so running the playbook again does not build it again; you can delete the folder once Zimbra is installed.
+
+On Red Hat and its derivatives, some build packages may only be in the CodeReady Builder repository (CRB, or PowerTools on 8). If installing them fails, enable it (`dnf config-manager --set-enabled crb`) or change **zimbra_source_packages_redhat**.
+
+To build once and install on many servers, build on one server, copy the `zcs-*.tgz` from `BUILDS` to a web server and set it in **zm_repo** for the others.
+
+* **zimbra_source_repo:** Git repository of zm-build - default: **https://github.com/Zimbra/zm-build.git**
+* **zimbra_source_thirdparty_server:** Server the third-party packages are downloaded from - default: **files.zimbra.com**
+* **zimbra_source_release:** Release name in the build, only used to name the build folders - default: **LIBERTY**
+* **zimbra_source_dir:** Where the sources are downloaded and built, one folder for each version. It is also the home of **zimbra_source_user** - default: **/usr/local/src/zimbra-build**
+* **zimbra_source_user:** User that builds Zimbra - default: **zmbuild**
+* **zimbra_source_build_timeout:** Seconds the build may take - default: **14400**
+* **zimbra_source_packages_debian** / **zimbra_source_packages_redhat:** Packages installed to build Zimbra
+* **zimbra_source_java_home:** The Java 8 JDK the build uses - default: **/usr/lib/jvm/java-8-openjdk-amd64** on Ubuntu, **/usr/lib/jvm/java-1.8.0** on Red Hat
+
 Installing Zimbra 10.1
 --------------
 
-Set **zimbra_version** and add the 10.1 builds to **zm_repo**:
+Set **zimbra_version** to the version you want. With nothing else set, the role builds it from source. To use installers you already have, add their builds to **zm_repo**:
 
 ```
 zimbra_version: 10.1.15
@@ -170,8 +201,8 @@ Upgrading Zimbra
 To upgrade a server, for example from 10.0 to 10.1:
 
 1. Back up the server (Zmbackup can help) and read Zimbra's release notes and upgrade instructions for the new version, which may require a newer distribution;
-2. Set **zimbra_version** to the new version, make sure **zm_repo** has its build for your distribution, and set **zimbra_upgrade: y**;
-3. Run the playbook. The role downloads the new installer and runs it over the existing installation. The proxy, mailbox and MTA settings are not reapplied during the upgrade;
+2. Set **zimbra_version** to the new version and **zimbra_upgrade: y**. Add its build to **zm_repo**, or leave it out to build it from source;
+3. Run the playbook. The role downloads or builds the new installer and runs it over the existing installation. The proxy, mailbox and MTA settings are not reapplied during the upgrade;
 4. Set **zimbra_upgrade** back to **n**, so the next runs do not run the installer again, and run the playbook once more to apply the configuration.
 
 Zmbackup Variables - only used when zimbra_zmbackup is "y"
@@ -204,12 +235,12 @@ GitHub Actions and CircleCI run ansible-lint, a syntax check, the unit tests and
   ```
   ansible-playbook tests/unit/main.yml
   ```
-* **Molecule** (`molecule/default`) runs the role from start to end, twice, in an Ubuntu container. Zimbra itself cannot run in a container, so the scenario installs a fake of it (`molecule/default/files/zcs-fake`) that records what the role asked of Zimbra, and checks it in `verify.yml`. It needs Docker:
+* **Molecule** runs the role from start to end, twice, in an Ubuntu container. Zimbra itself cannot run in a container, so the scenarios install a fake of it (`molecule/default/files/zcs-fake`) that records what the role asked of Zimbra, and check it in `verify.yml`. The `default` scenario downloads the installer set in **zm_repo**, and the `source` scenario builds it with a fake of zm-build (`molecule/default/files/zm-build`). It needs Docker:
   ```
   pip install -r requirements.txt
   ansible-galaxy collection install -r requirements.yml
   ansible-galaxy collection install community.docker
-  molecule test
+  molecule test --all
   ```
 
 Dependencies
@@ -234,15 +265,9 @@ Example Playbook
            zmlogoapp: /tmp/app.png
            zimbra_zmbackup: y
            zimbra_firewall: y
-           zm_repo:
-             10.1.15:
-               url: https://downloads.example.com/zimbra/10.1.15/
-               builds:
-                 ubuntu:
-                   22: zcs-10.1.15_GA_0425.UBUNTU22_64.20250624000000
 ```
 
-Installing Zimbra 10.1 on a server prepared by baseline:
+Installing Zimbra 10.1 from your own installers on a server prepared by baseline:
 ```
     - hosts: zimbra
       become: yes

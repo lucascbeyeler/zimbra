@@ -2,14 +2,15 @@
 #
 # Download and install Zimbra OSE
 ################################################################################
-- name: Checking there is a build for this distribution of Zimbra OSE {{ zimbra_version }}
-  ansible.builtin.assert:
-    that:
-      - zimbra_build | length > 0
-    fail_msg: >-
-      zm_repo has no Zimbra OSE {{ zimbra_version }} build for
-      {{ ansible_distribution }} {{ ansible_distribution_major_version }}
-    quiet: true
+- name: Using the installer in zm_repo of Zimbra OSE {{ zimbra_version }}
+  ansible.builtin.set_fact:
+    zimbra_installer_src: "{{ zm_repo[zimbra_version | string].url }}{{ zimbra_build }}.tgz"
+    zimbra_installer_name: "{{ zimbra_build }}"
+  when: zimbra_build | length > 0
+
+- name: Building from source the installer of Zimbra OSE {{ zimbra_version }}
+  ansible.builtin.include_tasks: source.yml
+  when: zimbra_build | length == 0
 
 - name: Update /etc/hosts
   ansible.builtin.lineinfile:
@@ -21,11 +22,11 @@
 
 - name: Download and unpacking Zimbra OSE {{ zimbra_version }}
   ansible.builtin.unarchive:
-    src: "{{ zm_repo[zimbra_version | string].url }}{{ zimbra_build }}.tgz"
+    src: "{{ zimbra_installer_src }}"
     dest: /usr/local/src/
     remote_src: true
     validate_certs: "{{ zimbra_download_validate_certs }}"
-    creates: /usr/local/src/{{ zimbra_build }}/install.sh
+    creates: /usr/local/src/{{ zimbra_installer_name }}/install.sh
 
 # The installer files have every password, so only root can read them
 - name: Create the folder to upload the scripts
@@ -55,7 +56,7 @@
 - name: Installing Zimbra OSE {{ zimbra_version }}
   ansible.builtin.shell: ./install.sh -s < /tmp/zcs/installZimbra-keystrokes
   args:
-    chdir: /usr/local/src/{{ zimbra_build }}/
+    chdir: /usr/local/src/{{ zimbra_installer_name }}/
   changed_when: true
 
 - name: Configuring Zimbra OSE's services for use
