@@ -21,6 +21,13 @@
   when: zimbra_dnscache | zimbra_bool and disable_existing_dns_stub_listener | zimbra_bool
 
 #
+# Opening the ports of the enabled services
+################################################################################
+- name: Opening the firewall ports
+  ansible.builtin.include_tasks: configure/firewall.yml
+  when: zimbra_firewall | zimbra_bool
+
+#
 # Installation process
 ################################################################################
 - name: Installing the dependencies

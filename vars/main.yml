@@ -28,6 +28,26 @@ zimbra_packages: >-
   {{ zimbra_package_selection
      + (zimbra_package_selection_8815 if zimbra_version | string == '8.8.15' else []) }}
 
+# Ports opened by zimbra_firewall, as port/protocol
+zimbra_firewall_mta_ports:
+  - 25/tcp    # SMTP
+  - 465/tcp   # SMTPS
+  - 587/tcp   # Submission
+# Served by the proxy, or by the mailbox when there is no proxy
+zimbra_firewall_mail_ports:
+  - 80/tcp    # HTTP, redirected to HTTPS
+  - 443/tcp   # HTTPS
+  - 110/tcp   # POP3
+  - 995/tcp   # POP3S
+  - 143/tcp   # IMAP
+  - 993/tcp   # IMAPS
+zimbra_firewall_ports: >-
+  {{ ((zimbra_firewall_mta_ports if zimbra_mta | zimbra_bool else [])
+      + (zimbra_firewall_mail_ports if zimbra_proxy | zimbra_bool or zimbra_store | zimbra_bool else [])
+      + (['7071/tcp'] if zimbra_firewall_admin | zimbra_bool and zimbra_store | zimbra_bool else [])
+      + (['9071/tcp'] if zimbra_firewall_admin | zimbra_bool and zimbra_proxy | zimbra_bool else [])
+      + zimbra_firewall_extra_ports) | unique }}
+
 # zmlocalconfig settings set to true on the MTA
 zimbra_antispam_settings:
   # SpamAssassin Auto Update

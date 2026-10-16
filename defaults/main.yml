@@ -44,6 +44,20 @@ timezone: UTC
 disable_existing_dns_stub_listener: n
 
 #
+# Firewall
+################################################################################
+# Open the ports of the enabled services in firewalld (Red Hat family) or ufw
+# (Ubuntu). The firewall must already be installed; the role does not install,
+# enable or start it.
+zimbra_firewall: n
+# Also open the admin console (7071, and 9071 through the proxy)
+zimbra_firewall_admin: y
+# firewalld zone the ports are opened in; empty for the default zone
+zimbra_firewall_zone: ""
+# Other ports to open, like "389/tcp" for the LDAP of a multi-server setup
+zimbra_firewall_extra_ports: []
+
+#
 # Anti-spam
 ################################################################################
 # DNS blocklists Postfix checks before accepting a message

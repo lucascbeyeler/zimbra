@@ -159,6 +159,25 @@
           - webui.stat.lnk_source == '/opt/zimbra/common/share/webui'
 
     #
+    # Firewall
+    ############################################################################
+    # ufw is not enabled in the container, but keeps the rules the role added
+    - name: Read the ufw rules
+      ansible.builtin.command: ufw show added
+      register: ufw_rules
+      changed_when: false
+
+    - name: Check the ports of the enabled services and the extra port are open
+      ansible.builtin.assert:
+        that:
+          - ufw_rules.stdout_lines[1:] | map('regex_replace', ' comment .*$', '') | list == expected
+        fail_msg: "{{ ufw_rules.stdout_lines }}"
+      vars:
+        expected: ['ufw allow 25/tcp', 'ufw allow 465/tcp', 'ufw allow 587/tcp', 'ufw allow 80/tcp',
+                   'ufw allow 443/tcp', 'ufw allow 110/tcp', 'ufw allow 995/tcp', 'ufw allow 143/tcp',
+                   'ufw allow 993/tcp', 'ufw allow 7071/tcp', 'ufw allow 9071/tcp', 'ufw allow 389/tcp']
+
+    #
     # Zmbackup
     ############################################################################
     - name: Check Zmbackup was installed once, with its settings

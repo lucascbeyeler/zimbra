@@ -8,6 +8,9 @@ platforms:
   - name: ubuntu_jammy
     image: ubuntu:jammy
     pre_build_image: true
+    # ufw runs iptables to read its status
+    capabilities:
+      - NET_ADMIN
 provisioner:
   name: ansible
   options:
@@ -24,6 +27,9 @@ provisioner:
         zimbra_spell: false
         zimbra_policyd: y
         zimbra_zmbackup: true
+        zimbra_firewall: y
+        zimbra_firewall_extra_ports:
+          - 389/tcp
         zm_repo:
           8.8.15:
             url: http://127.0.0.1:8000/
