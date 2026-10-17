@@ -30,9 +30,14 @@ Follow the conventions in [SPEC.md](SPEC.md):
 Update the tests with the change:
 
 * new variable, template or filter behaviour → `tests/unit/main.yml`;
-* new task on the host → `molecule/default/verify.yml`, and
+* new task on the host → `molecule/default/verify.yml` (the `source`
+  scenario runs the same checks), and
   `molecule/default/files/zcs-fake/fakezimbra.py` if the role calls a Zimbra
-  command or attribute the fake does not know yet.
+  command or attribute the fake does not know yet;
+* change to the build from source → `molecule/source/verify.yml`, and
+  `molecule/default/files/zm-build/build.pl` if the role runs zm-build in a
+  new way. A new variable used by the default scenario must also be set in
+  `molecule/source/molecule.yml`.
 
 Update the documentation: `README.md` (features and variables) and
 `documents/SPEC.md` when the behaviour, inputs or guarantees change.
@@ -53,7 +58,7 @@ ansible-playbook -i tests/inventory tests/test.yml --syntax-check
 ansible-playbook tests/unit/main.yml
 
 ansible-galaxy collection install community.docker
-molecule test        # needs Docker
+molecule test --all  # needs Docker; runs the default and source scenarios
 ```
 
 All of them must pass before you open the PR. These are the same checks
@@ -93,13 +98,13 @@ What changes and why (link the issue, if any).
 - Bullet list of the files/behaviours changed.
 
 ## Zimbra versions / distributions affected
-e.g. "8.8.15 and 10.x, all distributions" or "Ubuntu only".
+e.g. "10.0 and 10.1, all distributions", "build from source only" or "Ubuntu only".
 
 ## Testing
 - [ ] ansible-lint
 - [ ] Syntax check
 - [ ] Unit tests (`tests/unit/main.yml`)
-- [ ] Molecule (`molecule test`)
+- [ ] Molecule (`molecule test --all`)
 - [ ] Tested on a real server (version / distribution), if applicable
 
 ## Impact

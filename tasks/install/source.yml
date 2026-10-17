@@ -1,0 +1,136 @@
+---
+#
+# Build the Zimbra OSE installer from source with Zimbra's zm-build
+################################################################################
+- name: Checking this version of Zimbra OSE can be built from source on {{ ansible_distribution }}
+  ansible.builtin.assert:
+    that:
+      - zimbra_version | string is match('^[0-9]+[.][0-9]+[.][0-9]+$')
+      - ansible_os_family in ['Debian', 'RedHat']
+    fail_msg: >-
+      Zimbra OSE {{ zimbra_version }} cannot be built from source on
+      {{ ansible_distribution }} {{ ansible_distribution_major_version }}:
+      zimbra_version must be like 10.1.15, and the build runs on Ubuntu or
+      Red Hat and its derivatives. Or set zm_repo with a build for this server
+    quiet: true
+
+- name: Installing the packages to build Zimbra OSE (Ubuntu)
+  ansible.builtin.apt:
+    name: "{{ zimbra_source_packages_debian }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Installing the packages to build Zimbra OSE (CentOS/RedHat)
+  ansible.builtin.dnf:
+    name: "{{ zimbra_source_packages_redhat }}"
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Creating the user that builds Zimbra OSE
+  ansible.builtin.user:
+    name: "{{ zimbra_source_user }}"
+    home: "{{ zimbra_source_dir }}"
+    shell: /bin/bash
+    system: true
+    create_home: true
+
+- name: Creating the folder to build Zimbra OSE {{ zimbra_version }}
+  ansible.builtin.file:
+    path: "{{ zimbra_source_build_dir }}"
+    state: directory
+    owner: "{{ zimbra_source_user }}"
+    group: "{{ zimbra_source_user }}"
+    mode: "0755"
+
+- name: Checking if the installer was already built for Zimbra OSE {{ zimbra_version }}
+  ansible.builtin.find:
+    paths: "{{ zimbra_source_build_dir }}/BUILDS"
+    patterns: zcs-*.tgz
+    recurse: true
+  register: zimbra_source_installers
+
+- name: Building the installer of Zimbra OSE {{ zimbra_version }}
+  when: zimbra_source_installers.matched == 0
+  block:
+    - name: Reading the tags of zm-build
+      ansible.builtin.command: git ls-remote --tags --refs {{ zimbra_source_repo }}  # noqa command-instead-of-module
+      register: zimbra_source_repo_tags
+      changed_when: false
+      check_mode: false
+
+    # zm-build is tagged only in some patches too, so use the newest tag up
+    # to this version
+    - name: Choosing the tag of zm-build
+      ansible.builtin.set_fact:
+        zimbra_source_build_tag: >-
+          {{ zimbra_source_tags
+             | select('in', zimbra_source_repo_tags.stdout_lines | map('regex_replace', '^.*refs/tags/', '') | list)
+             | first | default('') }}
+
+    - name: Checking zm-build has a tag for Zimbra OSE {{ zimbra_version }}
+      ansible.builtin.assert:
+        that:
+          - zimbra_source_build_tag | length > 0
+        fail_msg: "{{ zimbra_source_repo }} has none of the tags {{ zimbra_source_tags | join(', ') }}"
+        quiet: true
+
+    - name: Downloading zm-build {{ zimbra_source_build_tag }}
+      ansible.builtin.git:
+        repo: "{{ zimbra_source_repo }}"
+        dest: "{{ zimbra_source_build_dir }}/zm-build"
+        version: "{{ zimbra_source_build_tag }}"
+        depth: 1
+        force: true
+      become: true
+      become_user: "{{ zimbra_source_user }}"
+
+    # Downloads the sources of every component next to zm-build and builds
+    # them, which takes an hour or more
+    # The log is in build.log, in the build folder
+    - name: Building Zimbra OSE {{ zimbra_version }}
+      ansible.builtin.shell: >-
+        ./build.pl
+        --ant-options -DskipTests=true
+        --git-default-tag={{ zimbra_source_tags | join(',') }}
+        --build-release-no={{ zimbra_version }}
+        --build-release={{ zimbra_source_release }}
+        --build-release-candidate=GA
+        --build-type=FOSS
+        --build-thirdparty-server={{ zimbra_source_thirdparty_server }}
+        --build-destination-base-dir={{ zimbra_source_build_dir }}/BUILDS
+        --no-interactive
+        > {{ zimbra_source_build_dir }}/build.log 2>&1
+      args:
+        chdir: "{{ zimbra_source_build_dir }}/zm-build"
+      environment:
+        ENV_CACHE_CLEAR_FLAG: "true"
+        JAVA_HOME: "{{ zimbra_source_java_home }}"
+      become: true
+      become_user: "{{ zimbra_source_user }}"
+      async: "{{ zimbra_source_build_timeout }}"
+      poll: 30
+      changed_when: true
+
+    - name: Finding the installer of Zimbra OSE {{ zimbra_version }}
+      ansible.builtin.find:
+        paths: "{{ zimbra_source_build_dir }}/BUILDS"
+        patterns: zcs-*.tgz
+        recurse: true
+      register: zimbra_source_installers
+
+- name: Checking the build made the installer of Zimbra OSE {{ zimbra_version }}
+  ansible.builtin.assert:
+    that:
+      - zimbra_source_installers.matched > 0
+    fail_msg: "The build made no installer, see {{ zimbra_source_build_dir }}/build.log"
+    quiet: true
+
+# The archive has a folder with its own name, like the downloaded builds
+- name: Using the installer built from source
+  ansible.builtin.set_fact:
+    zimbra_installer_src: "{{ zimbra_source_installer.path }}"
+    zimbra_installer_name: "{{ zimbra_source_installer.path | basename | regex_replace('[.]tgz$', '') }}"
+  vars:
+    zimbra_source_installer: "{{ zimbra_source_installers.files | sort(attribute='mtime') | last }}"

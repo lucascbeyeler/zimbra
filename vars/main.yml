@@ -7,9 +7,21 @@ zimbra_build: >-
   {{ zm_repo[zimbra_version | string].builds[ansible_distribution | lower][ansible_distribution_major_version | int]
      | default('') }}
 
-# Packages in the order the installer asks for them. The installer of
-# Zimbra 8.8.15 also asks for Chat, Drive and IMAPD.
-zimbra_package_selection:
+# Tags of the Zimbra sources a version is built from, newest first. Each
+# component of Zimbra is only tagged in the patches that changed it, so the
+# build uses the first of these tags each component has (10.1.15, 10.1.14...
+# 10.1.0, 10.1.0-GA)
+zimbra_version_parts: "{{ (zimbra_version | string).split('.') }}"
+zimbra_source_tags: >-
+  {{ range(zimbra_version_parts[2] | int, -1, -1)
+     | map('regex_replace', '^', zimbra_version_parts[0] ~ '.' ~ zimbra_version_parts[1] ~ '.')
+     | list + [zimbra_version_parts[0] ~ '.' ~ zimbra_version_parts[1] ~ '.0-GA'] }}
+
+# Folder the version is built in
+zimbra_source_build_dir: "{{ zimbra_source_dir }}/{{ zimbra_version }}"
+
+# Packages in the order the installer asks for them
+zimbra_packages:
   - {name: zimbra-ldap, enabled: "{{ zimbra_ldap }}"}
   - {name: zimbra-logger, enabled: "{{ zimbra_logger }}"}
   - {name: zimbra-mta, enabled: "{{ zimbra_mta }}"}
@@ -20,13 +32,6 @@ zimbra_package_selection:
   - {name: zimbra-spell, enabled: "{{ zimbra_spell }}"}
   - {name: zimbra-memcached, enabled: "{{ zimbra_memcached }}"}
   - {name: zimbra-proxy, enabled: "{{ zimbra_proxy }}"}
-zimbra_package_selection_8815:
-  - {name: zimbra-chat, enabled: "{{ zimbra_chat }}"}
-  - {name: zimbra-drive, enabled: "{{ zimbra_drive }}"}
-  - {name: zimbra-imapd, enabled: "{{ zimbra_imapd }}"}
-zimbra_packages: >-
-  {{ zimbra_package_selection
-     + (zimbra_package_selection_8815 if zimbra_version | string == '8.8.15' else []) }}
 
 # Ports opened by zimbra_firewall, as port/protocol
 zimbra_firewall_mta_ports:

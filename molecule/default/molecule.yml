@@ -30,8 +30,9 @@ provisioner:
         zimbra_firewall: y
         zimbra_firewall_extra_ports:
           - 389/tcp
+        zimbra_version: 10.1.15
         zm_repo:
-          8.8.15:
+          10.1.15:
             url: http://127.0.0.1:8000/
             builds:
               ubuntu:

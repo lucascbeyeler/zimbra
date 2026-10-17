@@ -1,0 +1,43 @@
+---
+# Like the default scenario, but zm_repo has no build of Zimbra, so the role
+# builds the installer from source with a fake of Zimbra's zm-build
+# (default/files/zm-build), which packs the fake Zimbra installer.
+driver:
+  name: docker
+platforms:
+  - name: ubuntu_jammy_source
+    image: ubuntu:jammy
+    pre_build_image: true
+    # ufw runs iptables to read its status
+    capabilities:
+      - NET_ADMIN
+provisioner:
+  name: ansible
+  options:
+    become: true
+  inventory:
+    group_vars:
+      all:
+        hostname: mail
+        domain: example.com
+        zmpasswd: S3cretPass
+        zmnetwork: 10.10.0.0/16
+        timezone: America/Sao_Paulo
+        zimbra_spell: false
+        zimbra_policyd: y
+        zimbra_zmbackup: true
+        zimbra_firewall: y
+        zimbra_firewall_extra_ports:
+          - 389/tcp
+        zimbra_version: 10.1.15
+        zimbra_source_repo: /srv/git/zm-build
+        # The fake build needs none of the Java and build tools
+        zimbra_source_packages_debian: [git]
+        zimbra_kam_url: http://127.0.0.1:8000/KAM.cf
+        zmbackup_repo: /srv/git/zmbackup
+        zmlogologin: "${MOLECULE_PROJECT_DIRECTORY}/molecule/default/files/logo.png"
+        zmlogoapp: "${MOLECULE_PROJECT_DIRECTORY}/molecule/default/files/logo.png"
+  playbooks:
+    prepare: ../default/prepare.yml
+    converge: ../default/converge.yml
+    verify: verify.yml

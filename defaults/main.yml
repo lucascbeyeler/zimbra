@@ -24,9 +24,6 @@ zimbra_apache: y
 zimbra_spell: y
 zimbra_memcached: y
 zimbra_proxy: y
-zimbra_chat: n
-zimbra_drive: n
-zimbra_imapd: n
 zimbra_policyd: n
 zimbra_zmbackup: n
 
@@ -77,28 +74,73 @@ zimbra_kam_url: https://www.pccc.com/downloads/SpamAssassin/contrib/KAM.cf
 #
 # Zimbra installers
 ################################################################################
-zimbra_version: 8.8.15
+# Zimbra 10.0 or newer, in the form major.minor.patch
+zimbra_version: 10.1.15
 
 # Validate the TLS certificate of the server the installer is downloaded from
 zimbra_download_validate_certs: true
 
-zm_repo:
-  8.8.15:
-    url: https://files.zimbra.com/downloads/8.8.15_GA/
-    builds:
-      ubuntu:
-        14: zcs-8.8.15_GA_3869.UBUNTU14_64.20190918004220
-        16: zcs-8.8.15_GA_3869.UBUNTU16_64.20190918004220
-        18: zcs-8.8.15_GA_3869.UBUNTU18_64.20190918004220
-        20: zcs-8.8.15_GA_4179.UBUNTU20_64.20211118033954
-      redhat:
-        6: zcs-8.8.15_GA_3869.RHEL6_64.20190918004220
-        7: zcs-8.8.15_GA_3869.RHEL7_64.20190918004220
-        8: zcs-8.8.15_GA_3953.RHEL8_64.20200629025823
-      centos:
-        6: zcs-8.8.15_GA_3869.RHEL6_64.20190918004220
-        7: zcs-8.8.15_GA_3869.RHEL7_64.20190918004220
-        8: zcs-8.8.15_GA_3953.RHEL8_64.20200629025823
+# Installer builds of each version, like:
+# zm_repo:
+#   10.1.15:
+#     url: https://downloads.example.com/zimbra/10.1.15/
+#     builds:
+#       ubuntu:
+#         22: zcs-10.1.15_GA_0425.UBUNTU22_64.20250624000000
+#       rocky:
+#         9: zcs-10.1.15_GA_0425.RHEL9_64.20250624000000
+# Zimbra does not publish the installers of the Open Source Edition, so when
+# zm_repo has no build for this version and distribution, the role builds the
+# installer from source on the server (see below)
+zm_repo: {}
+
+#
+# Building the installer from source - when zm_repo has no build
+################################################################################
+# Zimbra's build tool, which downloads the sources of every component
+zimbra_source_repo: https://github.com/Zimbra/zm-build.git
+# Server the third-party packages (OpenLDAP, Postfix, nginx...) come from
+zimbra_source_thirdparty_server: files.zimbra.com
+# Release name in the build, only used to name the build folders
+zimbra_source_release: LIBERTY
+# Where the sources are downloaded and built, one folder for each version.
+# A build needs several GB of disk
+zimbra_source_dir: /usr/local/src/zimbra-build
+# User that builds Zimbra, so the build does not run as root
+zimbra_source_user: zmbuild
+# Seconds the build may take
+zimbra_source_build_timeout: 14400
+
+# Packages needed to build Zimbra (Java 8 JDK, Ant, Maven, Ruby, compilers...)
+zimbra_source_packages_debian:
+  - openjdk-8-jdk
+  - ant
+  - ant-optional
+  - ant-contrib
+  - ruby
+  - git
+  - maven
+  - build-essential
+  - debhelper
+  - rsync
+  - wget
+zimbra_source_packages_redhat:
+  - java-1.8.0-openjdk-devel
+  - ant
+  - ant-junit
+  - ruby
+  - git
+  - maven
+  - gcc-c++
+  - make
+  - perl-Data-Dumper
+  - perl-IPC-Cmd
+  - rpm-build
+  - createrepo_c
+  - wget
+  - rsync
+zimbra_source_java_home: >-
+  {{ '/usr/lib/jvm/java-8-openjdk-amd64' if ansible_os_family == 'Debian' else '/usr/lib/jvm/java-1.8.0' }}
 
 zimbra_upgrade: n
 

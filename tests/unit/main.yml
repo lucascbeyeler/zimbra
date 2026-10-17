@@ -65,37 +65,93 @@
       vars:
         ansible_distribution: "{{ item.distribution }}"
         ansible_distribution_major_version: "{{ item.version }}"
+        zm_repo:
+          10.1.15:
+            url: https://example.com/
+            builds:
+              ubuntu:
+                20: zcs-10.1.15_GA_0425.UBUNTU20_64
+                22: zcs-10.1.15_GA_0425.UBUNTU22_64
+              redhat:
+                8: zcs-10.1.15_GA_0425.RHEL8_64
+              rocky:
+                9: zcs-10.1.15_GA_0425.RHEL9_64
       loop:
-        - {distribution: Ubuntu, version: "20", build: zcs-8.8.15_GA_4179.UBUNTU20_64.20211118033954}
-        - {distribution: Ubuntu, version: "18", build: zcs-8.8.15_GA_3869.UBUNTU18_64.20190918004220}
-        - {distribution: RedHat, version: "8", build: zcs-8.8.15_GA_3953.RHEL8_64.20200629025823}
-        - {distribution: CentOS, version: "7", build: zcs-8.8.15_GA_3869.RHEL7_64.20190918004220}
+        - {distribution: Ubuntu, version: "20", build: zcs-10.1.15_GA_0425.UBUNTU20_64}
+        - {distribution: Ubuntu, version: "22", build: zcs-10.1.15_GA_0425.UBUNTU22_64}
+        - {distribution: RedHat, version: "8", build: zcs-10.1.15_GA_0425.RHEL8_64}
+        - {distribution: Rocky, version: "9", build: zcs-10.1.15_GA_0425.RHEL9_64}
         # No build: the install stops with a clear message
         - {distribution: Ubuntu, version: "24", build: ""}
-        - {distribution: Rocky, version: "9", build: ""}
+        - {distribution: CentOS, version: "9", build: ""}
       loop_control:
         label: "{{ item.distribution }} {{ item.version }}"
+
+    - name: Find no build with the default zm_repo, so the installer is built from source
+      ansible.builtin.assert:
+        that:
+          - zm_repo == {}
+          - zimbra_build == ''
 
     - name: Find no build for a version missing from zm_repo
       ansible.builtin.assert:
         that:
           - zimbra_build == ''
       vars:
-        zimbra_version: 10.1.15
-
-    - name: Find the build of a version added to zm_repo
-      ansible.builtin.assert:
-        that:
-          - zimbra_build == 'zcs-10.1.15_GA_0425.UBUNTU22_64'
-      vars:
-        zimbra_version: 10.1.15
-        ansible_distribution_major_version: "22"
+        zimbra_version: 10.0.0
         zm_repo:
           10.1.15:
             url: https://example.com/
             builds:
               ubuntu:
-                22: zcs-10.1.15_GA_0425.UBUNTU22_64
+                20: zcs-10.1.15_GA_0425.UBUNTU20_64
+
+    #
+    # Building from source
+    ############################################################################
+    - name: List the tags a version is built from, newest first
+      ansible.builtin.assert:
+        that:
+          - zimbra_source_tags == item.tags
+        fail_msg: "{{ zimbra_source_tags }}"
+      vars:
+        zimbra_version: "{{ item.version }}"
+      loop:
+        - {version: 10.1.3, tags: [10.1.3, 10.1.2, 10.1.1, 10.1.0, 10.1.0-GA]}
+        - {version: 10.0.0, tags: [10.0.0, 10.0.0-GA]}
+        - {version: 10.1.15, tags: [10.1.15, 10.1.14, 10.1.13, 10.1.12, 10.1.11, 10.1.10, 10.1.9, 10.1.8,
+                                    10.1.7, 10.1.6, 10.1.5, 10.1.4, 10.1.3, 10.1.2, 10.1.1, 10.1.0, 10.1.0-GA]}
+
+    - name: Build each version in its own folder
+      ansible.builtin.assert:
+        that:
+          - zimbra_source_build_dir == '/usr/local/src/zimbra-build/10.1.15'
+
+    - name: Find the Java 8 JDK of each distribution
+      ansible.builtin.assert:
+        that:
+          - zimbra_source_java_home == item.java_home
+        quiet: true
+      vars:
+        ansible_os_family: "{{ item.family }}"
+      loop:
+        - {family: Debian, java_home: /usr/lib/jvm/java-8-openjdk-amd64}
+        - {family: RedHat, java_home: /usr/lib/jvm/java-1.8.0}
+
+    #
+    # Supported versions
+    ############################################################################
+    - name: Accept Zimbra 10.0 and newer, and reject 8.x
+      ansible.builtin.assert:
+        that:
+          - (item.version | string is version('10.0', '>=')) == item.supported
+        quiet: true
+      loop:
+        - {version: "{{ zimbra_version }}", supported: true}
+        - {version: 10.0.0, supported: true}
+        - {version: 10.1.15, supported: true}
+        - {version: 8.8.15, supported: false}
+        - {version: 8.7.11, supported: false}
 
     #
     # Installer answers (keystrokes)
@@ -113,22 +169,19 @@
         expected: [
           y, y,
           y, y, y, n, n, y, y, y, y, y,  # ldap ... proxy
-          n, n, n,                        # chat, drive, imapd (8.8.15 only)
           y
         ]
 
-    - name: Render the keystrokes for Zimbra 10 with booleans and yes/no
+    - name: Render the keystrokes with booleans and yes/no
       ansible.builtin.set_fact:
         keystrokes: "{{ lookup('ansible.builtin.template', templates ~ '/installZimbra-keystrokes').splitlines() }}"
       vars:
-        zimbra_version: 10.1.15
         zimbra_ldap: false
         zimbra_dnscache: true
         zimbra_snmp: "yes"
         zimbra_proxy: "no"
-        zimbra_chat: y
 
-    - name: Check the keystrokes for Zimbra 10 with booleans and yes/no
+    - name: Check the keystrokes with booleans and yes/no
       ansible.builtin.assert:
         that:
           - keystrokes == expected
@@ -175,8 +228,6 @@
         zimbra_logger: n
         zimbra_dnscache: true
         zimbra_spell: "no"
-        zimbra_chat: y
-        zimbra_drive: y
 
     - name: Check the installer configuration with other packages
       ansible.builtin.assert:
@@ -186,19 +237,7 @@
       vars:
         expected_packages: >-
           ^INSTALL_PACKAGES="zimbra-core zimbra-ldap zimbra-mta zimbra-dnscache zimbra-store
-          zimbra-apache zimbra-memcached zimbra-proxy zimbra-chat zimbra-drive"$
-
-    - name: Leave out Chat and Drive on Zimbra 10, its installer does not have them
-      ansible.builtin.assert:
-        that:
-          - lookup('ansible.builtin.template', templates ~ '/installZimbraScript.j2') is search(expected_packages, multiline=true)
-      vars:
-        zimbra_version: 10.1.15
-        zimbra_chat: y
-        zimbra_drive: y
-        expected_packages: >-
-          ^INSTALL_PACKAGES="zimbra-core zimbra-ldap zimbra-logger zimbra-mta zimbra-store
-          zimbra-apache zimbra-spell zimbra-memcached zimbra-proxy"$
+          zimbra-apache zimbra-memcached zimbra-proxy"$
 
     #
     # Firewall
