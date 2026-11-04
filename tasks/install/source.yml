@@ -57,6 +57,9 @@
     - name: Reading the tags of zm-build
       ansible.builtin.command: git ls-remote --tags --refs {{ zimbra_source_repo }}  # noqa command-instead-of-module
       register: zimbra_source_repo_tags
+      retries: "{{ zimbra_source_download_retries }}"
+      delay: 30
+      until: zimbra_source_repo_tags is succeeded
       changed_when: false
       check_mode: false
 
@@ -76,49 +79,66 @@
         fail_msg: "{{ zimbra_source_repo }} has none of the tags {{ zimbra_source_tags | join(', ') }}"
         quiet: true
 
+    # No depth here: the git module fails with "NoneType has no attribute
+    # startswith" when it updates a shallow clone of a tag, which breaks every
+    # run after a failed build
     - name: Downloading zm-build {{ zimbra_source_build_tag }}
       ansible.builtin.git:
         repo: "{{ zimbra_source_repo }}"
         dest: "{{ zimbra_source_build_dir }}/zm-build"
         version: "{{ zimbra_source_build_tag }}"
-        depth: 1
         force: true
       become: true
       become_user: "{{ zimbra_source_user }}"
+      register: zimbra_source_build_repo
+      retries: "{{ zimbra_source_download_retries }}"
+      delay: 30
+      until: zimbra_source_build_repo is succeeded
 
-    # Downloads the sources of every component next to zm-build and builds
-    # them, which takes an hour or more
+    # Downloads the sources of every component next to zm-build. It opens a
+    # connection for each tag of each component, and a single connection that
+    # is dropped stops it, so this part is retried. Components already
+    # downloaded are kept
+    # The log is in download.log, in the build folder
+    - name: Downloading the sources of Zimbra OSE {{ zimbra_version }}
+      ansible.builtin.shell: >-
+        {{ zimbra_source_build_command }} --stop-after-checkout
+        > {{ zimbra_source_build_dir }}/download.log 2>&1
+      args:
+        chdir: "{{ zimbra_source_build_dir }}/zm-build"
+      environment: "{{ zimbra_source_build_environment }}"
+      become: true
+      become_user: "{{ zimbra_source_user }}"
+      register: zimbra_source_download
+      retries: "{{ zimbra_source_download_retries }}"
+      delay: 30
+      until: zimbra_source_download is succeeded
+      changed_when: true
+
+    # Builds the components, which takes an hour or more, and is not retried
+    # because a failure here would only fail again
     # The log is in build.log, in the build folder
     - name: Building Zimbra OSE {{ zimbra_version }}
       ansible.builtin.shell: >-
-        ./build.pl
-        --ant-options -DskipTests=true
-        --git-default-tag={{ zimbra_source_tags | join(',') }}
-        --build-release-no={{ zimbra_version }}
-        --build-release={{ zimbra_source_release }}
-        --build-release-candidate=GA
-        --build-type=FOSS
-        --build-thirdparty-server={{ zimbra_source_thirdparty_server }}
-        --build-destination-base-dir={{ zimbra_source_build_dir }}/BUILDS
-        --no-interactive
+        {{ zimbra_source_build_command }}
         > {{ zimbra_source_build_dir }}/build.log 2>&1
       args:
         chdir: "{{ zimbra_source_build_dir }}/zm-build"
-      environment:
-        ENV_CACHE_CLEAR_FLAG: "true"
-        JAVA_HOME: "{{ zimbra_source_java_home }}"
+      environment: "{{ zimbra_source_build_environment }}"
       become: true
       become_user: "{{ zimbra_source_user }}"
       async: "{{ zimbra_source_build_timeout }}"
       poll: 30
       changed_when: true
 
-    - name: Finding the installer of Zimbra OSE {{ zimbra_version }}
-      ansible.builtin.find:
-        paths: "{{ zimbra_source_build_dir }}/BUILDS"
-        patterns: zcs-*.tgz
-        recurse: true
-      register: zimbra_source_installers
+# Outside the block above: a skipped task still replaces what it registers, so
+# an installer built by an earlier run would be lost
+- name: Finding the installer of Zimbra OSE {{ zimbra_version }}
+  ansible.builtin.find:
+    paths: "{{ zimbra_source_build_dir }}/BUILDS"
+    patterns: zcs-*.tgz
+    recurse: true
+  register: zimbra_source_installers
 
 - name: Checking the build made the installer of Zimbra OSE {{ zimbra_version }}
   ansible.builtin.assert:

@@ -28,10 +28,10 @@ Supported Zimbra Versions
 
 | Zimbra | Installer builds | Distributions |
 |---|---|---|
-| **10.1** (latest, default) | Built from source, or set in **zm_repo** | Ubuntu 20.04 and 22.04, Red Hat / CentOS / Rocky 8 and 9 |
+| **10.1** (latest, default) | Built from source, or set in **zm_repo** | Ubuntu 20.04 and 22.04, Ubuntu 24.04 (10.1.16 or newer), Red Hat / CentOS / Rocky 8 and 9 |
 | **10.0** | Built from source, or set in **zm_repo** | Ubuntu 20.04 and 22.04, Red Hat / CentOS / Rocky 8 and 9 |
 
-The distributions are the ones each Zimbra version supports.
+The distributions are the ones each Zimbra version supports. The default **zimbra_version** is older than 10.1.16, so set it to a newer version on Ubuntu 24.04. Zimbra publishes no packages for Ubuntu 26.04, so it cannot be installed there.
 
 Zimbra does not publish the 10.x installers of the Open Source Edition, so the role builds the installer from Zimbra's source code on the server, with Zimbra's own build tool. See [Building Zimbra from source](#building-zimbra-from-source). If you already have the installers (your own build or a mirror), set them in **zm_repo** and the role downloads them instead. See [Installing Zimbra 10.1](#installing-zimbra-101).
 
@@ -87,6 +87,7 @@ Role Variables
 * **zimbra_download_validate_certs:** Validate the TLS certificate of the server Zimbra is downloaded from. Default: **true**
 * **zimbra_rbls:** DNS blocklists the MTA checks before accepting a message. Default: **zen.spamhaus.org** and **bl.spamcop.net**
 * **zimbra_rbls_absent:** DNS blocklists removed from the MTA. Default: **dsn.rfc-ignorant.org** and **dnsbl.sorbs.net**, which were shut down and were added by older versions of this role
+* **zimbra_pyzor_servers:** Servers Pyzor checks messages against. Default: **public.pyzor.org:24441**
 * **zimbra_kam_url:** Where Kevin McGrail's SpamAssassin rules (KAM.cf) are downloaded from
 * **zm_repo:** Variable to inform which repository of Zimbra builds you want to download from. For each version, you need to set **url**, and a dictionary of **builds** according to distribution and distribution major version. The role downloads `<url><build>.tgz`. The distribution is Ansible's `ansible_distribution` in lower case (`ubuntu`, `redhat`, `centos`, `rocky`, `almalinux`, `oraclelinux`...). When it has no build of **zimbra_version** for the server's distribution, the role builds the installer from source. Default: empty
 Example:
@@ -162,7 +163,7 @@ When **zm_repo** has no installer of **zimbra_version** for the server's distrib
    ```
 5. Installs Zimbra with the installer it built, like a downloaded one.
 
-The build can take over an hour and needs several GB of free disk, and the server needs to reach GitHub, Maven Central and **zimbra_source_thirdparty_server**. Its log is in `<zimbra_source_dir>/<zimbra_version>/build.log`. The installer is kept in `<zimbra_source_dir>/<zimbra_version>/BUILDS`, so running the playbook again does not build it again; you can delete the folder once Zimbra is installed.
+The build can take over an hour and needs several GB of free disk, and the server needs to reach GitHub, Maven Central and **zimbra_source_thirdparty_server**. The sources are downloaded first, with retries because a single dropped connection stops `build.pl`, and components already downloaded are kept. The logs are `<zimbra_source_dir>/<zimbra_version>/download.log` and `build.log`. The installer is kept in `<zimbra_source_dir>/<zimbra_version>/BUILDS`, so running the playbook again does not build it again; you can delete the folder once Zimbra is installed.
 
 On Red Hat and its derivatives, some build packages may only be in the CodeReady Builder repository (CRB, or PowerTools on 8). If installing them fails, enable it (`dnf config-manager --set-enabled crb`) or change **zimbra_source_packages_redhat**.
 
@@ -174,6 +175,8 @@ To build once and install on many servers, build on one server, copy the `zcs-*.
 * **zimbra_source_dir:** Where the sources are downloaded and built, one folder for each version. It is also the home of **zimbra_source_user** - default: **/usr/local/src/zimbra-build**
 * **zimbra_source_user:** User that builds Zimbra - default: **zmbuild**
 * **zimbra_source_build_timeout:** Seconds the build may take - default: **14400**
+* **zimbra_source_clone_workers:** Components downloaded at the same time, up to 8 - default: **4**
+* **zimbra_source_download_retries:** Times the download of the sources is tried again when it fails - default: **5**
 * **zimbra_source_packages_debian** / **zimbra_source_packages_redhat:** Packages installed to build Zimbra
 * **zimbra_source_java_home:** The Java 8 JDK the build uses - default: **/usr/lib/jvm/java-8-openjdk-amd64** on Ubuntu, **/usr/lib/jvm/java-1.8.0** on Red Hat
 
@@ -247,7 +250,7 @@ GitHub Actions and CircleCI run ansible-lint, a syntax check, the unit tests and
 Dependencies
 ------------
 
-To run this playbook, you will need to run [lucascbeyeler.baseline](https://github.com/lucascbeyeler/baseline) too. We do not cover any kind of server preparation, like upgrade the system or change the hostname (even put the hostname in /etc/hosts is made by baseline). The motive is because all my playbooks will need some kind of preparation before executed, so to not including the same code in every single project, I made a different playbook that will do everything that is considered "common" in each one of my playbooks.
+To run this playbook, you will need to run [lucascbeyeler.baseline](https://github.com/lucascbeyeler/baseline) too, with **baseline_hosts_ip** set to the server's address so its name does not resolve to loopback. We do not cover any kind of server preparation, like upgrade the system or change the hostname (even put the hostname in /etc/hosts is made by baseline). The motive is because all my playbooks will need some kind of preparation before executed, so to not including the same code in every single project, I made a different playbook that will do everything that is considered "common" in each one of my playbooks.
 
 Example Playbook
 ----------------
