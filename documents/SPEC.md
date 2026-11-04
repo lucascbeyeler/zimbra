@@ -41,7 +41,7 @@ older release of the role for it).
 
 | Zimbra | Installer source | Distributions |
 |---|---|---|
-| 10.1 (latest, default `10.1.15`) | Built from source, or operator-supplied in `zm_repo` | Ubuntu 20.04/22.04, RHEL/CentOS/Rocky 8 and 9 |
+| 10.1 (latest, default `10.1.15`) | Built from source, or operator-supplied in `zm_repo` | Ubuntu 20.04/22.04, Ubuntu 24.04 (10.1.16 or newer), RHEL/CentOS/Rocky 8 and 9 |
 | 10.0 | Built from source, or operator-supplied in `zm_repo` | Ubuntu 20.04/22.04, RHEL/CentOS/Rocky 8 and 9 |
 
 Zimbra does not publish OSE 10.x installers. When `zm_repo` has a build of
@@ -116,6 +116,8 @@ installer changes.
 | `zimbra_source_dir` | `/usr/local/src/zimbra-build` | Build root, one folder per version; home of the build user |
 | `zimbra_source_user` | `zmbuild` | Unprivileged system user that runs the build |
 | `zimbra_source_build_timeout` | `14400` | Seconds the build may take (`async`) |
+| `zimbra_source_clone_workers` | `4` | Components downloaded at the same time, up to 8 |
+| `zimbra_source_download_retries` | `5` | Times git steps and the download of the sources are tried again |
 | `zimbra_source_packages_debian` / `zimbra_source_packages_redhat` | Java 8 JDK, Ant, Maven, Ruby, Git, compilers, packaging tools | Build dependencies per family |
 | `zimbra_source_java_home` | `/usr/lib/jvm/java-8-openjdk-amd64` (Debian) / `/usr/lib/jvm/java-1.8.0` (Red Hat) | `JAVA_HOME` of the build |
 
@@ -186,8 +188,9 @@ Legacy names (`hostname`, `domain`, `zmpasswd`, `ubuntu`, …) predate the
 ### 5.1 Flow (`tasks/main.yml`)
 
 1. **Check the version**: fail when `zimbra_version` is older than 10.0.
-   Then **detect** an existing install with `getent passwd zimbra`.
-   `zimbra_run_installer` is true when the user does not exist **or**
+   Then **detect** an existing install by looking for
+   `/opt/zimbra/bin/zmcontrol`; the `zimbra` user stays after an uninstall.
+   `zimbra_run_installer` is true when that file does not exist **or**
    `zimbra_upgrade` is set.
 2. **DNS stub listener** (`configure/disable_existing_dns_stub_listener.yml`,
    when `zimbra_dnscache` and `disable_existing_dns_stub_listener`): set
@@ -198,7 +201,8 @@ Legacy names (`hostname`, `domain`, `zmpasswd`, `ubuntu`, …) predate the
    immediate only when firewalld runs; fails if it is not installed) or
    `community.general.ufw` (rules are kept while ufw is disabled). Ports are
    only opened, never closed, and the firewall is never installed or started.
-4. **Dependencies** (`install/dependencies.yml`, when installing): remove
+4. **Dependencies** (`install/dependencies.yml`, when installing):
+   install `acl` and, unless a syslog daemon is present, `rsyslog`; remove
    Postfix/Sendmail; install Razor and Pyzor. On Ubuntu, if
    `apt-cache madison razor` finds nothing, install
    `software-properties-common` and enable the `universe` component.
@@ -225,7 +229,7 @@ Legacy names (`hostname`, `domain`, `zmpasswd`, `ubuntu`, …) predate the
    * **MTA** (`zimbra_mta`): remove `zimbra_rbls_absent`, add `zimbra_rbls`;
      install `KAM.cf` as `sakam.cf` and `files/sauser.cf` (`zimbra:zimbra
      0440`); enable SpamAssassin rule updates, restarts and compilation;
-     initialise Pyzor and Razor (discover/create/register) under
+     write Pyzor's `servers` file and initialise Razor (create/discover/register) under
      `/opt/zimbra/data/amavisd`; for PolicyD, install `files/config.php`,
      link the web UI into `htdocs/webui` and add `index.php` to Apache's
      `DirectoryIndex`.
@@ -250,14 +254,18 @@ Runs only when `zm_repo` has no build of `zimbra_version` for the host:
 3. create the system user `zimbra_source_user` (home `zimbra_source_dir`)
    and `zimbra_source_build_dir`, owned by it;
 4. if `<zimbra_source_build_dir>/BUILDS` already has a `zcs-*.tgz`, skip to
-   step 7 — a rerun never builds again;
+   step 8 — a rerun never builds again;
 5. read zm-build's tags with `git ls-remote` and clone it, as the build user,
    at the first of `zimbra_source_tags` it has (fails if none). Zimbra tags
    each component only in the patches that changed it, so 10.1.15 may use
    zm-build 10.1.13;
-6. run `build.pl` as the build user, with `ENV_CACHE_CLEAR_FLAG=true` and
-   `JAVA_HOME=zimbra_source_java_home`, under `async`
-   (`zimbra_source_build_timeout`, polled every 30 s), output in
+6. run `build.pl --stop-after-checkout` as the build user to download the
+   sources, retried `zimbra_source_download_retries` times, output in
+   `<zimbra_source_build_dir>/download.log`. `ENV_GIT_UPDATE_INCLUDE` keeps
+   the components already downloaded;
+7. run `build.pl` as the build user, not retried, with
+   `ENV_CACHE_CLEAR_FLAG=true` and `JAVA_HOME=zimbra_source_java_home`, under
+   `async` (`zimbra_source_build_timeout`, polled every 30 s), output in
    `<zimbra_source_build_dir>/build.log`:
    ```
    ./build.pl --ant-options -DskipTests=true
@@ -266,11 +274,12 @@ Runs only when `zm_repo` has no build of `zimbra_version` for the host:
      --build-release-candidate=GA --build-type=FOSS
      --build-thirdparty-server=<zimbra_source_thirdparty_server>
      --build-destination-base-dir=<zimbra_source_build_dir>/BUILDS
+     --clone-workers=<zimbra_source_clone_workers>
      --no-interactive
    ```
    `build.pl` clones every component next to zm-build at the first of the
    tags it has, and needs GitHub, Maven Central and the third-party server;
-7. fail if `BUILDS` has no `zcs-*.tgz`; otherwise use the newest one. Its
+8. fail if `BUILDS` has no `zcs-*.tgz`; otherwise use the newest one. Its
    top folder has the archive's name, as with downloaded builds.
 
 The build tools and the build folder stay on the host after the install.

@@ -11,16 +11,15 @@
       10.0 or newer
     quiet: true
 
+# Not the zimbra user: it stays after install.sh -u and after a failed install
 - name: Checking if there is an Zimbra OSE install already
-  ansible.builtin.command: getent passwd zimbra
-  register: getent_passwd
-  changed_when: false
-  failed_when: getent_passwd.rc not in [0, 2]
-  check_mode: false
+  ansible.builtin.stat:
+    path: /opt/zimbra/bin/zmcontrol
+  register: zimbra_zmcontrol
 
 - name: Deciding if Zimbra OSE needs to be installed or upgraded
   ansible.builtin.set_fact:
-    zimbra_run_installer: "{{ getent_passwd.rc == 2 or zimbra_upgrade | zimbra_bool }}"
+    zimbra_run_installer: "{{ not zimbra_zmcontrol.stat.exists or zimbra_upgrade | zimbra_bool }}"
 
 #
 # Freeing port 53 for zimbra-dnscache before it is installed

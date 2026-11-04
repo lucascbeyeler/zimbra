@@ -53,20 +53,23 @@
     group: root
     mode: "0600"
 
-- name: Installing Zimbra OSE {{ zimbra_version }}
-  ansible.builtin.shell: ./install.sh -s < /tmp/zcs/installZimbra-keystrokes
-  args:
-    chdir: /usr/local/src/{{ zimbra_installer_name }}/
-  changed_when: true
+# The installer files are removed even when the install fails
+- name: Running the installer
+  block:
+    - name: Installing Zimbra OSE {{ zimbra_version }}
+      ansible.builtin.shell: ./install.sh -s < /tmp/zcs/installZimbra-keystrokes
+      args:
+        chdir: /usr/local/src/{{ zimbra_installer_name }}/
+      changed_when: true
 
-- name: Configuring Zimbra OSE's services for use
-  ansible.builtin.command: ./zmsetup.pl -c /tmp/zcs/installZimbraScript
-  args:
-    chdir: /opt/zimbra/libexec/
-  changed_when: true
-  notify: Restart Zimbra
-
-- name: Removing the installer files
-  ansible.builtin.file:
-    path: /tmp/zcs
-    state: absent
+    - name: Configuring Zimbra OSE's services for use
+      ansible.builtin.command: ./zmsetup.pl -c /tmp/zcs/installZimbraScript
+      args:
+        chdir: /opt/zimbra/libexec/
+      changed_when: true
+      notify: Restart Zimbra
+  always:
+    - name: Removing the installer files
+      ansible.builtin.file:
+        path: /tmp/zcs
+        state: absent

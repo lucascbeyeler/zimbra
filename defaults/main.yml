@@ -68,6 +68,10 @@ zimbra_rbls_absent:
   - dsn.rfc-ignorant.org
   - dnsbl.sorbs.net
 
+# Servers Pyzor checks messages against
+zimbra_pyzor_servers:
+  - public.pyzor.org:24441
+
 # Kevin McGrail's SpamAssassin rules
 zimbra_kam_url: https://www.pccc.com/downloads/SpamAssassin/contrib/KAM.cf
 
@@ -110,6 +114,10 @@ zimbra_source_dir: /usr/local/src/zimbra-build
 zimbra_source_user: zmbuild
 # Seconds the build may take
 zimbra_source_build_timeout: 14400
+# Components downloaded at the same time, up to 8
+zimbra_source_clone_workers: 4
+# Times the download of the sources is tried again when it fails
+zimbra_source_download_retries: 5
 
 # Packages needed to build Zimbra (Java 8 JDK, Ant, Maven, Ruby, compilers...)
 zimbra_source_packages_debian:

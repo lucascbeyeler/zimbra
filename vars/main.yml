@@ -20,6 +20,27 @@ zimbra_source_tags: >-
 # Folder the version is built in
 zimbra_source_build_dir: "{{ zimbra_source_dir }}/{{ zimbra_version }}"
 
+# How zm-build's build.pl is run, to download the sources and to build them
+zimbra_source_build_command: >-
+  ./build.pl
+  --ant-options -DskipTests=true
+  --git-default-tag={{ zimbra_source_tags | join(',') }}
+  --build-release-no={{ zimbra_version }}
+  --build-release={{ zimbra_source_release }}
+  --build-release-candidate=GA
+  --build-type=FOSS
+  --build-thirdparty-server={{ zimbra_source_thirdparty_server }}
+  --build-destination-base-dir={{ zimbra_source_build_dir }}/BUILDS
+  --clone-workers={{ zimbra_source_clone_workers }}
+  --no-interactive
+zimbra_source_build_environment:
+  ENV_CACHE_CLEAR_FLAG: "true"
+  JAVA_HOME: "{{ zimbra_source_java_home }}"
+  # Keep the components already downloaded when build.pl runs again. It would
+  # check out the first tag in them and stop when the component does not have
+  # it. No component has this name.
+  ENV_GIT_UPDATE_INCLUDE: "^keep-downloaded-components$"
+
 # Packages in the order the installer asks for them
 zimbra_packages:
   - {name: zimbra-ldap, enabled: "{{ zimbra_ldap }}"}

@@ -6,6 +6,11 @@ set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 for arg in "$@"; do
   case "$arg" in
+    --stop-after-checkout)
+      mkdir -p "$here/../fake-build"
+      echo run >> "$here/../fake-build/downloads"
+      exit 0
+      ;;
     --build-release-no=*) release_no=${arg#*=} ;;
     --build-destination-base-dir=*) destination=${arg#*=} ;;
   esac

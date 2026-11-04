@@ -2,6 +2,28 @@
 #
 # Installing dependencies and removing other smtp servers
 ################################################################################
+# Ansible needs setfacl to run tasks as zmbuild and zimbra when it connects as
+# an unprivileged user, and minimal server images do not include it
+- name: Ensure ACL tools are installed
+  ansible.builtin.package:
+    name: acl
+    state: present
+
+# The Zimbra installer stops when there is no syslog daemon, and minimal server
+# images do not include one. rsyslog is left out when syslog-ng is in use
+- name: Checking if there is a syslog daemon
+  ansible.builtin.shell: command -v rsyslogd || command -v syslog-ng
+  register: zimbra_syslog_daemon
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Ensure rsyslog is installed
+  ansible.builtin.package:
+    name: rsyslog
+    state: present
+  when: zimbra_syslog_daemon.rc != 0
+
 - name: Ensure Sendmail and Postfix is not installed
   ansible.builtin.package:
     name: "{{ absent }}"

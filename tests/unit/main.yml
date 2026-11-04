@@ -153,6 +153,14 @@
         - {version: 8.8.15, supported: false}
         - {version: 8.7.11, supported: false}
 
+    - name: Check how the build is run
+      ansible.builtin.assert:
+        that:
+          - zimbra_source_build_command is search('--clone-workers=4 ')
+          - zimbra_source_build_command is search('--build-type=FOSS ')
+          - zimbra_source_build_environment.ENV_GIT_UPDATE_INCLUDE | length > 0
+        fail_msg: "{{ zimbra_source_build_command }}"
+
     #
     # Installer answers (keystrokes)
     ############################################################################

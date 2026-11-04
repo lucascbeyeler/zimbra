@@ -80,12 +80,22 @@
 #
 # Configuring Pyzor
 ################################################################################
-- name: Downloading and Configuring Pyzor's Anti-spam Base
-  ansible.builtin.command: pyzor --homedir /opt/zimbra/data/amavisd/.pyzor discover
-  args:
-    creates: /opt/zimbra/data/amavisd/.pyzor/servers
-  become: true
-  become_user: zimbra
+# Pyzor 1.0 removed the discover command, and still exits 0 when asked for it
+- name: Creating Pyzor's Anti-spam Base folder
+  ansible.builtin.file:
+    path: /opt/zimbra/data/amavisd/.pyzor
+    state: directory
+    owner: zimbra
+    group: zimbra
+    mode: "0700"
+
+- name: Configuring Pyzor's Anti-spam Base
+  ansible.builtin.copy:
+    content: "{{ zimbra_pyzor_servers | join('\n') }}\n"
+    dest: /opt/zimbra/data/amavisd/.pyzor/servers
+    owner: zimbra
+    group: zimbra
+    mode: "0600"
 
 #
 # Configuring Razor
