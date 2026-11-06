@@ -228,7 +228,7 @@ Zmbackup is downloaded from Git and installed with its unattended installer (`in
 * **zmbackup_rotate_days:** Number of days backups are kept - default: **30**
 * **zmbackup_lock_backup:** Allow only one backup session per type per day - default: **true**
 
-When Zimbra's own CA validates the server's certificate, which is the case with its self-signed certificate, the installer sets `caCertificatePath` in `/etc/zmbackup/zmbackup.yaml` to it. With a certificate from another CA, Zmbackup uses the Java trust store. An upgrade leaves the configuration as it is and only warns when `caCertificatePath` is missing, so set it by hand on installs made before Zmbackup 2.0 chose it (see the Zmbackup README).
+When Zimbra's own CA validates the server's certificate, which is the case with its self-signed certificate, the installer sets `caCertificatePath` in `/etc/zmbackup/zmbackup.yaml` to it. With a certificate from another CA, Zmbackup uses the Java trust store. An upgrade adds any setting the configuration is missing with the value a new install would use, including `caCertificatePath` when Zimbra's CA validates the server, after saving the previous file as `zmbackup.yaml.<timestamp>.bak` (see the Zmbackup README).
 
 Testing
 ------------
