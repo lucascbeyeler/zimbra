@@ -19,6 +19,24 @@
     name: "{{ 'crond' if ansible_os_family == 'RedHat' else 'cron' }}"
     state: started
     enabled: true
+  when: ansible_service_mgr == "systemd"
+
+# Without systemd, as in a container with no init system, the service module
+# cannot start it, so the daemon is started directly when it is not running
+- name: Checking if the cron daemon is running
+  ansible.builtin.shell: grep -qx -e cron -e crond /proc/[0-9]*/comm
+  register: zmbackup_cron_running
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  when: ansible_service_mgr != "systemd"
+
+- name: Starting the cron daemon
+  ansible.builtin.command: "{{ 'crond' if ansible_os_family == 'RedHat' else 'cron' }}"
+  changed_when: true
+  when:
+    - ansible_service_mgr != "systemd"
+    - zmbackup_cron_running.rc != 0
 
 - name: Downloading Zmbackup
   ansible.builtin.git:
