@@ -7,6 +7,19 @@
     name: git
     state: present
 
+# Zmbackup schedules its backups in /etc/cron.d, and its installer stops when
+# no cron daemon is running. Minimal server images do not include one
+- name: Ensure a cron daemon is installed
+  ansible.builtin.package:
+    name: "{{ 'cronie' if ansible_os_family == 'RedHat' else 'cron' }}"
+    state: present
+
+- name: Ensure the cron daemon is running and starts on boot
+  ansible.builtin.service:
+    name: "{{ 'crond' if ansible_os_family == 'RedHat' else 'cron' }}"
+    state: started
+    enabled: true
+
 - name: Downloading Zmbackup
   ansible.builtin.git:
     repo: "{{ zmbackup_repo }}"
