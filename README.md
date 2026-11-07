@@ -31,7 +31,7 @@ Supported Zimbra Versions
 | **10.1** (latest, default) | Built from source, or set in **zm_repo** | Ubuntu 20.04 and 22.04, Ubuntu 24.04 (10.1.16 or newer), Red Hat / CentOS / Rocky 8 and 9 |
 | **10.0** | Built from source, or set in **zm_repo** | Ubuntu 20.04 and 22.04, Red Hat / CentOS / Rocky 8 and 9 |
 
-The distributions are the ones each Zimbra version supports. The default **zimbra_version** is older than 10.1.16, so set it to a newer version on Ubuntu 24.04. Zimbra publishes no packages for Ubuntu 26.04, so it cannot be installed there.
+The distributions are the ones each Zimbra version supports. The default **zimbra_version**, 10.1.21, is the version this release was built from source and tested with, on Ubuntu 24.04. Zimbra publishes no packages for Ubuntu 26.04, so it cannot be installed there.
 
 Zimbra does not publish the 10.x installers of the Open Source Edition, so the role builds the installer from Zimbra's source code on the server, with Zimbra's own build tool. See [Building Zimbra from source](#building-zimbra-from-source). If you already have the installers (your own build or a mirror), set them in **zm_repo** and the role downloads them instead. See [Installing Zimbra 10.1](#installing-zimbra-101).
 
@@ -83,7 +83,7 @@ Role Variables
 * **zmlogologin:** Inform the path for your logo (Login Screen) - don't inform and no image will be applied;
 * **zmlogoapp:** Inform the path for your logo (Application Screen) - don't inform and no image will be applied;
 * **timezone:** inform the timezone the playbook should set in your server;
-* **zimbra_version:** Inform which version of Zimbra you want to install, like **10.1.15** or **10.0.0**. It must be 10.0 or newer, in the form major.minor.patch. Default: **10.1.15**
+* **zimbra_version:** Inform which version of Zimbra you want to install, like **10.1.21** or **10.0.0**. It must be 10.0 or newer, in the form major.minor.patch. Default: **10.1.21**
 * **zimbra_download_validate_certs:** Validate the TLS certificate of the server Zimbra is downloaded from. Default: **true**
 * **zimbra_rbls:** DNS blocklists the MTA checks before accepting a message. Default: **zen.spamhaus.org** and **bl.spamcop.net**
 * **zimbra_rbls_absent:** DNS blocklists removed from the MTA. Default: **dsn.rfc-ignorant.org** and **dnsbl.sorbs.net**, which were shut down and were added by older versions of this role

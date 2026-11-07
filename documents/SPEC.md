@@ -41,7 +41,7 @@ older release of the role for it).
 
 | Zimbra | Installer source | Distributions |
 |---|---|---|
-| 10.1 (latest, default `10.1.15`) | Built from source, or operator-supplied in `zm_repo` | Ubuntu 20.04/22.04, Ubuntu 24.04 (10.1.16 or newer), RHEL/CentOS/Rocky 8 and 9 |
+| 10.1 (latest, default `10.1.21`) | Built from source, or operator-supplied in `zm_repo` | Ubuntu 20.04/22.04, Ubuntu 24.04 (10.1.16 or newer), RHEL/CentOS/Rocky 8 and 9 |
 | 10.0 | Built from source, or operator-supplied in `zm_repo` | Ubuntu 20.04/22.04, RHEL/CentOS/Rocky 8 and 9 |
 
 Zimbra does not publish OSE 10.x installers. When `zm_repo` has a build of
@@ -100,7 +100,7 @@ installer changes.
 
 | Variable | Default | Description |
 |---|---|---|
-| `zimbra_version` | `10.1.15` | Version to install: 10.0 or newer, as `major.minor.patch` |
+| `zimbra_version` | `10.1.21` | Version to install: 10.0 or newer, as `major.minor.patch` |
 | `zm_repo` | `{}` | Installers to download, `{<version>: {url, builds: {<distro>: {<major>: <build>}}}}`. Download URL is `<url><build>.tgz`. `<distro>` is `ansible_distribution` lower-cased (`ubuntu`, `redhat`, `centos`, `rocky`, `almalinux`…). Without a build for the host, the installer is built from source |
 | `zimbra_download_validate_certs` | `true` | Validate TLS when downloading the installer |
 | `zimbra_upgrade` | `n` | Run the installer over an existing installation |
