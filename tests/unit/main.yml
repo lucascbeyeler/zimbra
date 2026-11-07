@@ -65,6 +65,7 @@
       vars:
         ansible_distribution: "{{ item.distribution }}"
         ansible_distribution_major_version: "{{ item.version }}"
+        zimbra_version: 10.1.15
         zm_repo:
           10.1.15:
             url: https://example.com/
@@ -125,7 +126,7 @@
     - name: Build each version in its own folder
       ansible.builtin.assert:
         that:
-          - zimbra_source_build_dir == '/usr/local/src/zimbra-build/10.1.15'
+          - zimbra_source_build_dir == '/usr/local/src/zimbra-build/10.1.21'
 
     - name: Find the Java 8 JDK of each distribution
       ansible.builtin.assert:

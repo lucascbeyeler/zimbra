@@ -79,7 +79,7 @@ zimbra_kam_url: https://www.pccc.com/downloads/SpamAssassin/contrib/KAM.cf
 # Zimbra installers
 ################################################################################
 # Zimbra 10.0 or newer, in the form major.minor.patch
-zimbra_version: 10.1.15
+zimbra_version: 10.1.21
 
 # Validate the TLS certificate of the server the installer is downloaded from
 zimbra_download_validate_certs: true
