@@ -212,7 +212,7 @@ To upgrade a server, for example from 10.0 to 10.1:
 Zmbackup Variables - only used when zimbra_zmbackup is "y"
 --------------
 
-Zmbackup is downloaded from Git and installed with its unattended installer (`install-java.sh --unattended`) once Zimbra is installed and running. It installs a Java 17 JDK when one is missing and builds Zmbackup on the server, so the server needs internet access, and the distribution must provide a Java 17 JDK package (openjdk-17-jdk or java-17-openjdk-devel). If Zmbackup is already installed, it is upgraded only when the downloaded source changes (for example, after you change **zmbackup_version**). Its configuration is left as it is.
+Zmbackup is downloaded from Git and installed with its unattended installer (`install-java.sh --unattended`) once Zimbra is installed and running. It installs a Java 17 JDK when one is missing and builds Zmbackup on the server, so the server needs internet access, and the distribution must provide a Java 17 JDK package (openjdk-17-jdk or java-17-openjdk-devel). The role also installs and starts a cron daemon (cron, or cronie on CentOS/RedHat), because Zmbackup's scheduled backups run from `/etc/cron.d` and its installer stops when no cron daemon is running. If Zmbackup is already installed, it is upgraded only when the downloaded source changes (for example, after you change **zmbackup_version**). Its configuration is left as it is.
 
 * **zmbackup_repo:** Git repository Zmbackup is downloaded from - default: **https://github.com/lucascbeyeler/zmbackup.git**
 * **zmbackup_version:** Branch, tag or commit of Zmbackup to install. It must include the unattended installer - default: **2.0**
@@ -228,7 +228,7 @@ Zmbackup is downloaded from Git and installed with its unattended installer (`in
 * **zmbackup_rotate_days:** Number of days backups are kept - default: **30**
 * **zmbackup_lock_backup:** Allow only one backup session per type per day - default: **true**
 
-When Zimbra uses its self-signed certificate, set `caCertificatePath` in `/etc/zmbackup/zmbackup.yaml` before the first backup (see the Zmbackup README).
+When Zimbra's own CA validates the server's certificate, which is the case with its self-signed certificate, the installer sets `caCertificatePath` in `/etc/zmbackup/zmbackup.yaml` to it. With a certificate from another CA, Zmbackup uses the Java trust store. An upgrade adds any setting the configuration is missing with the value a new install would use, including `caCertificatePath` when Zimbra's CA validates the server, after saving the previous file as `zmbackup.yaml.<timestamp>.bak` (see the Zmbackup README).
 
 Testing
 ------------
